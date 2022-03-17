@@ -39,6 +39,7 @@ App::App()
 	loadAssets();
 	lifeTexTransform.resize(player.getHpMax());
 	audioManager.Play("audio/hornpipeBacking.wav", true, 0.5f);
+	pauseMenu = PauseMenu(buttonTexture, font);
 	finishedDrawSubmit = true;
 }
 
@@ -47,6 +48,7 @@ App::~App()
 	if(submitDraw.joinable())
 		submitDraw.join();
 	delete mRender;
+	delete font;
 	mRender = nullptr;
 	glfwDestroyWindow(mWindow);
 	glfwTerminate();
@@ -63,6 +65,8 @@ void App::loadAssets()
 	mapGoal = MapGoal(*mRender);
 	lifeTex = mRender->LoadTexture("textures/ui/gameplay/feather.png");
 	noLifeTex = mRender->LoadTexture("textures/ui/gameplay/darkfeather.png");
+	font = mRender->LoadFont("textures/ui/menu/PermanentMarker-Regular.ttf");
+	buttonTexture = mRender->LoadTexture("textures/ui/menu/button.png");
 	loadMap();
 	mRender->endResourceLoad();
 }
@@ -145,9 +149,10 @@ void App::update()
 		}
 	}
 	if(input.Keys[GLFW_KEY_ESCAPE] && !previousInput.Keys[GLFW_KEY_ESCAPE])
-		glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+		isPaused = !isPaused;
 
-	gameUpdate();
+	if(!isPaused)
+		gameUpdate();
 
 	postUpdate();
 #ifdef TIME_APP_DRAW_UPDATE
@@ -168,7 +173,7 @@ void App::gameUpdate()
 
 	player.Update(timer, input, staticColliders);
 
-	mapGoal.Update(timer);
+	mapGoal.Update(timer, cam.getCameraArea());
 	if(gh::colliding(mapGoal.getHitBox(), player.getHitBox()))
 	{
 		nextMap();
@@ -176,7 +181,7 @@ void App::gameUpdate()
 
 	for(int i = 0; i < fruits.size(); i++)
 	{
-		fruits[i].Update(timer);
+		fruits[i].Update(timer, cam.getCameraArea());
 		if(gh::colliding(fruits[i].getHitBox(), player.getHitBox()))
 		{
 			player.addHP(1);
@@ -221,17 +226,15 @@ void App::gameUpdate()
 				break;
 			}
 	}
+
+	cam.Target(player.getMidPoint(), timer);
+	currentMap.Update(cam.getCameraArea());
 }
 
 void App::postUpdate()
 {
 	time += timer.FrameElapsed();
 	timer.Update();
-	previousInput = input;
-	input.offset = 0;
-	cam.setZoom(zoom);
-	cam.Target(player.getMidPoint(), timer);
-	currentMap.Update(cam.getCameraArea());
 
 	for(int i = 0; i < lifeTexTransform.size(); i++)
 	{
@@ -242,8 +245,17 @@ void App::postUpdate()
 				lifeTex.dim.x,
 				 lifeTex.dim.y), 0.0f, 5.0f);
 	}
-
+	if(isPaused)
+	{
+		pauseMenu.Update(cam.getCameraArea(), correctedMouse(), input, previousInput);
+		if(pauseMenu.isResumed())
+			isPaused = false;
+		if(pauseMenu.isExit())
+			glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+	}
 	mRender->set2DViewMatrix(cam.getViewMat());
+	previousInput = input;
+	input.offset = 0;
 }
 
 
@@ -265,15 +277,10 @@ void App::draw()
 
 	gameDraw();
 
-	for(int i = 0; i < lifeTexTransform.size(); i++)
-	{
-		if(i < player.getHp())
-			mRender->DrawQuad(lifeTex, lifeTexTransform[i]);
-		else
-			mRender->DrawQuad(noLifeTex, lifeTexTransform[i]);
-	}
-
 	submitDraw = std::thread(&Render::endDraw, mRender, std::ref(finishedDrawSubmit));
+
+	if(isPaused)
+		pauseMenu.Draw(*mRender);
 
 #ifdef TIME_APP_DRAW_UPDATE
 	auto stop = std::chrono::high_resolution_clock::now();
@@ -304,6 +311,14 @@ void App::gameDraw()
 	}
 
 	mapGoal.Draw(*mRender);
+
+	for(int i = 0; i < lifeTexTransform.size(); i++)
+	{
+		if(i < player.getHp())
+			mRender->DrawQuad(lifeTex, lifeTexTransform[i]);
+		else
+			mRender->DrawQuad(noLifeTex, lifeTexTransform[i]);
+	}
 }
 
 glm::vec2 App::correctedPos(glm::vec2 pos)
@@ -367,7 +382,7 @@ void App::mouse_button_callback(GLFWwindow* window, int button, int action, int 
 		}
 		else if (action == GLFW_RELEASE)
 		{
-			app->input.Buttons[button] = true;
+			app->input.Buttons[button] = false;
 		}
 	}
 }

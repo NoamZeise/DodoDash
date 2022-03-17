@@ -22,7 +22,7 @@ protected:
 private:
 	Animation animation;
 	Frame currentFrame;
-
+	bool active = true;
 	glm::mat4 modelMat;
 public:
 	MapObj() {}
@@ -30,13 +30,16 @@ public:
 	{
 		this->animation = animation;
 	}
-	void Update(Timer &timer)
+	void Update(Timer &timer, glm::vec4 cameraRect)
 	{
-		currentFrame = animation.PingPong(timer);
+		active = gh::colliding(drawRect, cameraRect);
+		if(active)
+			currentFrame = animation.PingPong(timer);
 	}
 	void Draw(Render &render)
 	{
-		render.DrawQuad(currentFrame.tex, modelMat, glm::vec4(1.0f), currentFrame.textureOffset);
+		if(active)
+			render.DrawQuad(currentFrame.tex, modelMat, glm::vec4(1.0f), currentFrame.textureOffset);
 	}
 	void setDrawRect(glm::vec4 drawRect, float scale)
 	{

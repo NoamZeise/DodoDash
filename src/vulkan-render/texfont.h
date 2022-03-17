@@ -42,6 +42,7 @@ struct Character
 class Font
 {
 public:
+	Font(){}
 	Font(std::string file, TextureLoader* texLoader);
 	~Font();
 	Character* getChar(char c);

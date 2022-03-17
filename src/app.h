@@ -29,6 +29,7 @@
 #include "poacher.h"
 #include "bullet.h"
 #include "mapobj.h"
+#include "menu.h"
 
 //#define TIME_APP_DRAW_UPDATE
 //#define MULTI_UPDATE_ON_SLOW_DRAW
@@ -96,6 +97,13 @@ private:
 	Map currentMap;
 	float zoom = 1.0f;	
 	float mapScale = 1.0f;
+
+	Resource::Font* font;
+	Resource::Texture buttonTexture;
+
+	bool isPaused = false;
+	PauseMenu pauseMenu;
+
 };
 
 #endif
