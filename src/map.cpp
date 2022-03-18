@@ -1,11 +1,17 @@
 #include "map.h"
 
-Map::Map(std::string filename, Render* render, float scale)
+Map::Map(std::string filename, Render* render, float scale, Resource::Font* mapFont, float waterSpeed)
 {
+	this->mapFont = mapFont;
 	map = tiled::Map(filename);
 	map.tileWidth *= scale;
 	map.tileHeight *= scale;
 	mapRect = glm::vec4(0, 0, map.width * map.tileWidth, map.height * map.tileHeight);
+
+	this->waterRiseRate = waterSpeed;
+	this->waterMoveRate = -waterSpeed * 5;
+	water = render->LoadTexture("textures/water.png");
+	Reset();
 
 	tileMats.resize(map.layers.size());
 	toDraw.resize(map.width * map.height);
@@ -17,7 +23,7 @@ Map::Map(std::string filename, Render* render, float scale)
 			tileRects[index] = glm::vec4(x * map.tileWidth, y * map.tileHeight, map.tileWidth, map.tileHeight);
 			for(unsigned int i = 0; i < map.layers.size(); i++) 
 				tileMats[i].push_back(glmhelper::calcMatFromRect(tileRects[index], 0, 0.0f + (float)i/10.0f));
-			toDraw[index++] = false;
+			index++;
 		}
 		
 
@@ -69,20 +75,46 @@ Map::Map(std::string filename, Render* render, float scale)
 				fruits.push_back(glm::vec4(obj.x, obj.y, obj.w, obj.h));
 		}
 	}
+	
+	for(const auto &txt: map.texts)
+	{
+		mapTexts.push_back(
+			MapText(
+				glm::vec4(txt.obj.x * scale, txt.obj.y * scale, txt.obj.w * scale * 1.2f, txt.obj.h * scale),
+				glm::vec4(txt.colour.r / 255.0f, txt.colour.g / 255.0f, txt.colour.b / 255.0f, txt.colour.a / 255.0f),
+				txt.text, 
+				txt.pixelSize * scale));
+	}
+
 	colliders.push_back(glm::vec4(-100, -100, 100, mapRect.w + 100));
 	colliders.push_back(glm::vec4(mapRect.z, -100, 100, mapRect.w + 100));
 }
 
 
-void Map::Update(glm::vec4 cameraRect)
+void Map::Update(glm::vec4 cameraRect, Timer &timer)
 {
-	for(unsigned int i = 0; i < toDraw.size(); i++)
+	lastCamRect = cameraRect;
+
+	waterLevel -= timer.FrameElapsed() * waterRiseRate;
+	waterTexLevel -= timer.FrameElapsed() * waterRiseRate;
+	waterMove += timer.FrameElapsed() * waterMoveRate;
+	if(waterMove > mapRect.z)
+		waterMove = 0.0f;
+	waterTexOffset = glmhelper::calcTexOffset(water.dim, glm::vec4(mapRect.x + waterMove, mapRect.y, mapRect.z, water.dim.y));
+
+	waterMat = glmhelper::calcMatFromRect(glm::vec4(0, waterTexLevel, mapRect.z, water.dim.y), 0.0f, 2.0);
+
+	for(auto &txt: mapTexts)
 	{
-		if(gh::colliding(cameraRect, tileRects[i]))
-			toDraw[i] = true;
-		else
-			toDraw[i] = false;
+		txt.toDraw = gh::colliding(txt.rect, cameraRect);
 	}
+	toDraw.clear();
+	for(unsigned int tile = 0; tile < tileRects.size(); tile++)
+		if(gh::colliding(cameraRect, tileRects[tile]))
+			for(unsigned int layer = 0; layer < map.layers.size(); layer++)
+				if(map.layers[layer].data[tile] != 0)
+					toDraw.push_back(TileDraw(tiles[map.layers[layer].data[tile]].texture, tileMats[layer][tile], tiles[map.layers[layer].data[tile]].tileRect));
+	
 }
 
 void Map::Draw(Render &render)
@@ -93,13 +125,18 @@ void Map::Draw(Render &render)
 		render.DrawQuad(Resource::Texture(), glmhelper::calcMatFromRect(rect, 0, 5.0f), glm::vec4(1.0f));
 	}
 	#endif
-	for(unsigned int i = 0; i < map.layers.size(); i++)
+
+	render.DrawQuad(water, waterMat, glm::vec4(1.0f), waterTexOffset);
+	for(auto &txt: mapTexts)
 	{
-		for(unsigned int j = 0; j < map.layers[i].data.size(); j++)
-		{
-			if(toDraw[j])
-				if(map.layers[i].data[j] != 0)
-					render.DrawQuad(tiles[map.layers[i].data[j]].texture, tileMats[i][j], glm::vec4(1.0f), tiles[map.layers[i].data[j]].tileRect);
-		}
+		if(txt.toDraw)
+			render.DrawString(mapFont, txt.text,
+				glm::vec2(txt.rect.x, txt.rect.y),
+				 txt.pixelSize, 0, txt.colour, 0.0f);
+	}
+
+	for(unsigned int i = 0; i < toDraw.size(); i++)
+	{
+		render.DrawQuad(toDraw[i].tex, toDraw[i].tileMat, glm::vec4(1.0f), toDraw[i].texOffset);
 	}
 }

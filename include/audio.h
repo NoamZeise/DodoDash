@@ -229,6 +229,12 @@ public:
 		return false;
 	}
 
+	void SetAllVolume(float volume)
+	{
+		for (size_t i = 0; i < activeAudio.size(); i++)
+			activeAudio[i]->volume = volume;
+	}
+
 private:
 	std::map<std::string, AudioData*> loaded;
 	std::vector<Instance*> activeAudio;

@@ -8,7 +8,6 @@
 #include <stdexcept>
 #include <stdlib.h>
 #include <vector>
-
 #include <iostream>
 
 namespace tiled
@@ -83,6 +82,25 @@ struct Tileset
 	unsigned int imageHeight;
 };
 
+struct Colour
+{
+	Colour() { r = 0; g = 0; b = 0; a = 0;}
+	Colour(int r, int g, int b, int a) { this->r = r; this->g = g; this->b = b; this->a = a; }
+	int r;
+	int g;
+	int b;
+	int a;
+};
+
+struct Text
+{
+	Object obj;
+	Colour colour;
+	std::string text;
+	int pixelSize;
+	int wrap;
+};
+
 struct Map
 {
 public:
@@ -99,6 +117,7 @@ public:
 	std::vector<Layer> layers;
 	std::vector<ObjectGroup> objectGroups;
 	std::vector<ImageLayer> imgLayer;
+	std::vector<Text> texts;
 };
 
 } //namespace end

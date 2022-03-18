@@ -220,20 +220,43 @@ Map::Map(std::string filename)
 
 		for(auto objectInfo = objGroupInfo->first_node("object"); objectInfo; objectInfo = objectInfo->next_sibling("object"))
 		{
-			objectGroups.back().objs.push_back(Object());
+			auto objTextNode =  objectInfo->first_node("text");
+			Object* fillObj = nullptr;
+			if(objTextNode != nullptr)
+			{
+				texts.push_back(Text());
+				texts.back().pixelSize = std::atoi(objTextNode->first_attribute("pixelsize")->value());
+				texts.back().text = objTextNode->value();
+				std::string colour = objTextNode->first_attribute("color") != nullptr ? objTextNode->first_attribute("color")->value() : "";
+				if(colour != "")
+				{
+					texts.back().colour.r =  std::stoi(colour.substr(1, 2), nullptr, 16);
+					texts.back().colour.g =  std::stoi(colour.substr(3, 2), nullptr, 16);
+					texts.back().colour.b =  std::stoi(colour.substr(5, 2), nullptr, 16);
+					texts.back().colour.a =  colour.size() > 7 ? std::stoi(colour.substr(7, 2), nullptr, 16) : 255;
+				}
+				fillObj = &texts.back().obj;
+			}
+			else
+			{
+				objectGroups.back().objs.push_back(Object());
+				fillObj = &objectGroups.back().objs.back();
+			}
 
 			auto objPropertiesNode = objectInfo->first_node("properties");
 			if(objPropertiesNode != nullptr)
-				objectGroups.back().objs.back().props = fillPropStruct(objPropertiesNode);
+				fillObj->props = fillPropStruct(objPropertiesNode);
 			else
-				objectGroups.back().objs.back().props = Properties();
+				fillObj->props = Properties();
+
+
 
 			auto x = objectInfo->first_attribute("x");
 			auto y = objectInfo->first_attribute("y");
-			if(x!= nullptr && y != nullptr)
+			if(x != nullptr && y != nullptr)
 			{ 	
-				objectGroups.back().objs.back().x = std::atof(x->value());
-				objectGroups.back().objs.back().y = std::atof(y->value());
+				fillObj->x = std::atof(x->value());
+				fillObj->y = std::atof(y->value());
 			}
 			else
 				std::cout << "WARNING: object without coords" << std::endl;
@@ -242,8 +265,8 @@ Map::Map(std::string filename)
 			auto h = objectInfo->first_attribute("height");
 			if(w != nullptr && h != nullptr)
 			{
-				objectGroups.back().objs.back().w = std::atof(w->value());
-				objectGroups.back().objs.back().h = std::atof(h->value());
+				fillObj->w = std::atof(w->value());
+				fillObj->h = std::atof(h->value());
 			}
 			
 		}

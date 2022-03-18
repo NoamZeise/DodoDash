@@ -29,19 +29,20 @@ public:
 	glm::vec4 getHitBox() { return hitRect; }
 	void bounce()
 	{ 
-		velocity.y = jumpMax;		
+		velocity.y = jumpMax;
+		//yAcceleration = jumpAccel;		
 		sinceJumpPressed = 0.0f;
 		unpressedJump = true;
 		isFloating = false;
 		isBoosting = false;
-		sinceGroundedTimer = 0.0f;
-		jumpTimer = 0.0f;
+		//grounded = true;
+		//sinceGroundedTimer = 0.0f;
+		//jumpTimer = 0.0f;
 		boostTimer = 0.0f;
-		yAcceleration = jumpAccel;
 	}
 	void Reset(glm::vec2 pos)
 	{
-		hp = 3;
+		hp = maxHp;
 		invincibilityTimer = invincibilityDelay;
 		position = pos;
 	}
@@ -60,6 +61,10 @@ public:
 			hp = maxHp;
 		else
 			hp += i;
+	}
+	void setJumpPressed()
+	{
+		sinceJumpPressed = 100.0f;
 	}
 	int getHp() { return hp; }
 	int getHpMax() { return maxHp; }
@@ -91,6 +96,8 @@ glm::vec4 hitRect;
 float xAcceleration = 0.0025f;
 float yAcceleration = 0.0f;
 float xMax = 0.7f;
+float xMaxNormal = 0.7f;
+float xMaxPaniced = 0.9f;
 float scale = 1.0f;
 float friction = 0.8f;
 float flyFloat = 0.4f;
@@ -113,6 +120,8 @@ float sinceGroundedDelay = 70.0f;
 
 float sinceJumpPressed = 0.0f;
 
+bool invFlash = false;
+
 float invincibilityDelay = 1000.0f;
 float invincibilityTimer = invincibilityDelay;
 
@@ -121,8 +130,8 @@ bool jumped = false;
 
 int moveDir = 0;
 int prevMoveDir = 0;
-int hp = 3;
-int maxHp = 3;
+int hp = 2;
+int maxHp = 2;
 bool facingRight = true;
 
 bool justJumped = false;
@@ -132,6 +141,8 @@ bool justFloat = false;
 bool unpressedJump = false;
 bool isFloating = false;
 bool isBoosting = false;
+
+float changeAmount = 0.25f;
 
 glm::vec4 drawRect;
 glm::mat4 modelMat;

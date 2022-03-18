@@ -20,6 +20,12 @@ Player::Player(Render &render, float scale)
 
 void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &colliders)
 {
+	if(invincibilityTimer < invincibilityDelay)
+		invFlash = ((int)(invincibilityTimer / 100.0f) % 2 == 0);
+	if(hp == 1)
+		xMax = xMaxPaniced;
+	else
+		xMax = xMaxNormal;
 	moveDir = 0;
 	jumpPressed = false;
 	if(input.Keys[GLFW_KEY_RIGHT])
@@ -30,10 +36,8 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 	{
 		moveDir -= 1;
 	}
-	if(sinceJumpPressed < 100.0f)
-		unpressedJump = true;
-	else
-		unpressedJump = false;
+	unpressedJump = sinceJumpPressed < 100.0f;
+
 	if(input.Keys[GLFW_KEY_Z])
 	{
 		sinceJumpPressed += timer.FrameElapsed();
@@ -66,7 +70,7 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 			{
 				isFloating = true;
 				auto sinceP = sinceJumpPressed - boostDelay;
-				float floatPercent = sinceP < 1000.0f + boostDelay? sinceP/1000.0f : 1.0f;
+				float floatPercent = sinceP < 1000.0f + boostDelay ? sinceP/1000.0f : 1.0f;
 				float floatFactor =  1.0f - (flyFloat * floatPercent);
 				//std::cout << floatFactor << std::endl;
 				yAcceleration = floatFactor * gravity;
@@ -98,6 +102,10 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 	if((moveDir == -1 && velocity.x > 0) || (moveDir == 1 && velocity.x < 0))
 	{
 		velocity.x = 0;
+	}
+	if(grounded && moveDir != 0 && (moveDir * velocity.x) < xMax/5.0f)
+	{
+		velocity.x = xMax/5.0f * moveDir;
 	}
 	velocity.x += moveDir * xAcceleration * timer.FrameElapsed();
 
@@ -145,11 +153,11 @@ void Player::movement(Timer &timer, std::vector<glm::vec4> &colliders)
 	glm::vec4 rect = colliding(colliders, hitRect);
 	if(rect != glm::vec4(0))
 	{
-		int change = 0;
+		float change = 0;
 		if(velocity.x > 0)
-			change = -1;
+			change = -changeAmount;
 		if(velocity.x < 0)
-			change = 1;
+			change = changeAmount;
 		if(change != 0)
 			while(gh::colliding(hitRect, rect))
 			{
@@ -162,7 +170,7 @@ void Player::movement(Timer &timer, std::vector<glm::vec4> &colliders)
 	rect = colliding(colliders, hitRect);
 	if(rect != glm::vec4(0))
 	{
-		int change = 0;
+		float change = 0;
 		if(velocity.y > 0)
 		{
 			grounded = true;
@@ -172,12 +180,12 @@ void Player::movement(Timer &timer, std::vector<glm::vec4> &colliders)
 			jumpTimer = 0.0f;
 			boostTimer = 0.0f;
 			velocity.y = 0.0f;
-			change = -1;
+			change = -changeAmount;
 		}
 		if(velocity.y < 0)
 		{
 			velocity.y = 0;
-			change = 1;
+			change = changeAmount;
 		}
 		if(change != 0)
 			while(gh::colliding(hitRect, rect))
@@ -185,8 +193,6 @@ void Player::movement(Timer &timer, std::vector<glm::vec4> &colliders)
 				position.y += change;
 				hitRect.y += change;
 			}
-		position.y -= change/2;
-		hitRect.y -= change/2;
 	}
 }
 
@@ -294,8 +300,8 @@ void Player::animate(Timer &timer)
 
 void Player::Draw(Render &render)
 { 
-	if(invincibilityTimer < invincibilityDelay)
-		render.DrawQuad(currentFrame.tex, modelMat, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), currentFrame.textureOffset);
+	if(invincibilityTimer < invincibilityDelay && invFlash)
+		render.DrawQuad(currentFrame.tex, modelMat, glm::vec4(5.0f, 5.0f, 5.0f, 1.0f), currentFrame.textureOffset);
 	else
 		render.DrawQuad(currentFrame.tex, modelMat, glm::vec4(1.0f), currentFrame.textureOffset);
 	//render.DrawQuad(Resource::Texture(), glmhelper::calcMatFromRect(hitRect, 0, 5.0f), glm::vec4(1.0f));

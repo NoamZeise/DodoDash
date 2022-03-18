@@ -479,6 +479,7 @@ void Render::DrawQuad(const Resource::Texture& texture, glm::mat4 modelMatrix)
 
 void Render::DrawString(Resource::Font* font, std::string text, glm::vec2 position, float size, float rotate, glm::vec4 colour, float depth)
 {
+	
 	if (font == nullptr)
 	{
 		std::cout << "font is NULL" << std::endl;

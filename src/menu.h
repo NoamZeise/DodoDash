@@ -54,7 +54,7 @@ public:
 		for(auto& btn: buttons)
 			btn.Update(cameraRect, mousePos);
 	}
-	void Draw(Render &render)
+	virtual void Draw(Render &render)
 	{
 		render.DrawQuad(select, modelMat);
 		for(int i = 0; i < buttons.size(); i++)
@@ -90,14 +90,21 @@ class PauseMenu: public Menu
 {
 public:
 	PauseMenu() : Menu() {}
-	PauseMenu(Resource::Texture buttonTex, Resource::Font* font):
-		Menu(buttonTex, font, {"Resume", "Exit"}, glm::vec2(settings::TARGET_WIDTH/2 - 150, 300), glm::vec2(300, 100), 300) {}
+	PauseMenu(Resource::Texture colourPixel, Resource::Texture buttonTex, Resource::Font* font):
+		Menu(buttonTex, font, {"Resume", "Exit"}, glm::vec2(settings::TARGET_WIDTH/2 - 150, 300), glm::vec2(300, 100), 150) 
+		{
+			this->colourPixel = colourPixel;
+		}
 
-	void Update(glm::vec4 cameraRect, glm::vec2 mousePos, Input &input, Input &prevInput) override
+	void Update(glm::vec4 cameraRect, glm::vec2 mousePos, Input &input, Input &prevInput, Timer &timer)
 	{
+		fadeTimer += timer.FrameElapsed();
+		fadeRatio = (fadeTimer < fadeDelay ? fadeTimer/fadeDelay : 1.0f);
+		bgMat = glmhelper::calcMatFromRect(glm::vec4((int)cameraRect.x, (int)cameraRect.y, settings::TARGET_WIDTH, settings::TARGET_HEIGHT), 0.0f, 3.0f);
 		Menu::Update(cameraRect, mousePos, input, prevInput);
 		if(input.Keys[GLFW_KEY_Z] && !prevInput.Keys[GLFW_KEY_Z])
 		{
+			Reset();
 			if(activeSelected(0))
 				resumed = true;
 			if(activeSelected(1))
@@ -106,6 +113,7 @@ public:
 		}
 		else if (input.Buttons[GLFW_MOUSE_BUTTON_LEFT] && !prevInput.Buttons[GLFW_MOUSE_BUTTON_LEFT])
 		{
+			Reset();
 			if(activeMouse(0))
 				resumed = true;
 			if(activeMouse(1))
@@ -119,12 +127,36 @@ public:
 		}
 	}
 
-	bool isResumed() {return resumed; }
-	bool isExit() { return exit; }
+	void Draw(Render &render) override
+	{
+		render.DrawQuad(colourPixel, bgMat, glm::vec4(0.0f, 0.0f, 0.0f, 0.8f * fadeRatio));
+		Menu::Draw(render);
+	}
+
+	bool isResumed() 
+	{
+		return resumed; 
+	}
+	bool isExit() 
+	{ 
+		return exit;
+	}
+
+	void Reset()
+	{
+		fadeTimer = 0.0f;
+	}
 
 private:
 	bool resumed = false;
 	bool exit = false;
+	Resource::Texture colourPixel;
+	glm::mat4 bgMat;
+
+	float fadeDelay = 150.0f;
+	float fadeTimer = 0.0f;
+	float fadeRatio;
+
 };
 
 

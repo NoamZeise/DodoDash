@@ -10,7 +10,7 @@ App::App()
 	if (!glfwInit())
 			throw std::runtime_error("failed to initialise glfw!");
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); //using vulkan not openGL
-	mWindow = glfwCreateWindow(mWindowWidth, mWindowHeight, "Game Parade", nullptr, nullptr);
+	mWindow = glfwCreateWindow(mWindowWidth, mWindowHeight, "Dodo Dash", nullptr, nullptr);
 	if(!mWindow)
 	{
 		glfwTerminate();
@@ -22,9 +22,9 @@ App::App()
 	glfwSetScrollCallback(mWindow, scroll_callback);
 	glfwSetKeyCallback(mWindow, key_callback);
 	glfwSetMouseButtonCallback(mWindow, mouse_button_callback);
-	//glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetInputMode(mWindow, GLFW_RAW_MOUSE_MOTION, glfwRawMouseMotionSupported());
-	
+	glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
 	int width = mWindowWidth;
 	int height = mWindowHeight;
 	if(settings::USE_TARGET_RESOLUTION)
@@ -38,8 +38,8 @@ App::App()
 
 	loadAssets();
 	lifeTexTransform.resize(player.getHpMax());
-	audioManager.Play("audio/hornpipeBacking.wav", true, 0.5f);
-	pauseMenu = PauseMenu(buttonTexture, font);
+	//audioManager.Play("audio/Dodo Hornpipe Demo.ogg", true, 0.5f);
+	pauseMenu = PauseMenu(colourPixel, buttonTexture, font);
 	finishedDrawSubmit = true;
 }
 
@@ -56,23 +56,26 @@ App::~App()
 
 void App::loadAssets()
 {
-	maps.push_back(Map("maps/testMap.tmx", mRender, mapScale));
-	maps.push_back(Map("maps/testMap2.tmx", mRender, mapScale));
-	currentMap = maps[0];
+	font = mRender->LoadFont("textures/ui/menu/PermanentMarker-Regular.ttf");
+	currentMapIndex = 1;
+	maps.push_back(Map("maps/level1-jumptut.tmx", mRender, mapScale, font, 0.015f));
+	maps.push_back(Map("maps/level2-poachertut.tmx", mRender, mapScale, font, 0.02f));
+	currentMap = maps[currentMapIndex];
 	player = Player(*mRender, 0.6f);
 	poacher = Poacher(*mRender, mapScale, glm::vec4(0, 0, 0, 0));
 	fruit = Fruit(*mRender);
 	mapGoal = MapGoal(*mRender);
 	lifeTex = mRender->LoadTexture("textures/ui/gameplay/feather.png");
 	noLifeTex = mRender->LoadTexture("textures/ui/gameplay/darkfeather.png");
-	font = mRender->LoadFont("textures/ui/menu/PermanentMarker-Regular.ttf");
 	buttonTexture = mRender->LoadTexture("textures/ui/menu/button.png");
+	colourPixel = mRender->LoadTexture("textures/ui/pixel.png");
 	loadMap();
 	mRender->endResourceLoad();
 }
 
 void App::loadMap()
 {
+	currentMap.Reset();
 	player.Reset(currentMap.getPlayerSpawn());
 	bullets.clear();
 	poachers.clear();
@@ -112,9 +115,20 @@ void App::run()
 {
 	while (!glfwWindowShouldClose(mWindow))
 	{
+#ifdef TIME_GAMELOOP
+		auto start = std::chrono::high_resolution_clock::now();
+#endif
 		update();
 		if(mWindowWidth != 0 && mWindowHeight != 0)
 			draw();
+
+#ifdef TIME_GAMELOOP
+		auto stop = std::chrono::high_resolution_clock::now();
+		std::cout
+		<< "gameloop: "
+		<< std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count()
+		<< " microseconds" << std::endl;
+#endif
 	}
 }
 
@@ -149,7 +163,10 @@ void App::update()
 		}
 	}
 	if(input.Keys[GLFW_KEY_ESCAPE] && !previousInput.Keys[GLFW_KEY_ESCAPE])
+	{
 		isPaused = !isPaused;
+		pauseToggled();
+	}
 
 	if(!isPaused)
 		gameUpdate();
@@ -172,9 +189,10 @@ void App::gameUpdate()
 	}
 
 	player.Update(timer, input, staticColliders);
-
+	auto playerMid = player.getMidPoint();
+	auto playerHitBox = player.getHitBox();
 	mapGoal.Update(timer, cam.getCameraArea());
-	if(gh::colliding(mapGoal.getHitBox(), player.getHitBox()))
+	if(gh::colliding(mapGoal.getHitBox(), playerHitBox))
 	{
 		nextMap();
 	}
@@ -182,23 +200,23 @@ void App::gameUpdate()
 	for(int i = 0; i < fruits.size(); i++)
 	{
 		fruits[i].Update(timer, cam.getCameraArea());
-		if(gh::colliding(fruits[i].getHitBox(), player.getHitBox()))
+		if(gh::colliding(fruits[i].getHitBox(), playerHitBox))
 		{
 			player.addHP(1);
 			fruits.erase(fruits.begin() + i--);
 		}
 	}
-
-	if(player.getHitBox().y > currentMap.getMapRect().w)
+	if(playerHitBox.y > currentMap.getMapRect().w || playerMid.y > currentMap.getWaterLevel())
+	{
 		loadMap();
-	auto playerMid = player.getMidPoint();
+	}
 	for (int i = 0; i < poachers.size(); i++)
 	{
 		poachers[i].Update(timer, cam.getCameraArea(), playerMid, &bullets);
 		if(poachers[i].isAlive())
-			if(gh::colliding(player.getHitBox(), poachers[i].getHitBox()))
+			if(gh::colliding(playerHitBox, poachers[i].getHitBox()))
 			{
-				if(player.getHitBox().y < poachers[i].getHitBox().y)
+				if(playerHitBox.y < poachers[i].getHitBox().y)
 				{
 					player.bounce();
 					poachers[i].kill();
@@ -213,7 +231,7 @@ void App::gameUpdate()
 	for(unsigned int i = 0; i < bullets.size(); i++)
 	{
 		bullets[i].Update(timer, cam.getCameraArea());
-		if(gh::colliding(player.getHitBox(), bullets[i].getHitBox()))
+		if(gh::colliding(playerHitBox, bullets[i].getHitBox()))
 		{
 			player.damage();
 			bullets.erase(bullets.begin() + i--);
@@ -228,7 +246,7 @@ void App::gameUpdate()
 	}
 
 	cam.Target(player.getMidPoint(), timer);
-	currentMap.Update(cam.getCameraArea());
+	currentMap.Update(cam.getCameraArea(), timer);
 }
 
 void App::postUpdate()
@@ -243,19 +261,32 @@ void App::postUpdate()
 				(10 + i * lifeTex.dim.x) + (int)cam.getCameraOffset().x,
 				(10) + (int)cam.getCameraOffset().y,
 				lifeTex.dim.x,
-				 lifeTex.dim.y), 0.0f, 5.0f);
+				 lifeTex.dim.y), 0.0f, 2.0f);
 	}
 	if(isPaused)
 	{
-		pauseMenu.Update(cam.getCameraArea(), correctedMouse(), input, previousInput);
+		pauseMenu.Update(cam.getCameraArea(), correctedMouse(), input, previousInput, timer);
 		if(pauseMenu.isResumed())
+		{
+			player.setJumpPressed();
 			isPaused = false;
+			pauseToggled();
+		}
 		if(pauseMenu.isExit())
 			glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
 	}
 	mRender->set2DViewMatrix(cam.getViewMat());
 	previousInput = input;
 	input.offset = 0;
+}
+
+void App::pauseToggled()
+{
+	pauseMenu.Reset();
+	if(isPaused)
+		glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	else
+		glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 }
 
 
@@ -277,10 +308,10 @@ void App::draw()
 
 	gameDraw();
 
-	submitDraw = std::thread(&Render::endDraw, mRender, std::ref(finishedDrawSubmit));
-
 	if(isPaused)
 		pauseMenu.Draw(*mRender);
+
+	submitDraw = std::thread(&Render::endDraw, mRender, std::ref(finishedDrawSubmit));
 
 #ifdef TIME_APP_DRAW_UPDATE
 	auto stop = std::chrono::high_resolution_clock::now();

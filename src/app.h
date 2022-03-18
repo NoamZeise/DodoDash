@@ -32,6 +32,7 @@
 #include "menu.h"
 
 //#define TIME_APP_DRAW_UPDATE
+//#define TIME_GAMELOOP
 //#define MULTI_UPDATE_ON_SLOW_DRAW
 
 class App
@@ -60,6 +61,7 @@ private:
 	void gameDraw();
 	void nextMap();
 	void loadMap();
+	void pauseToggled();
 
 	glm::vec2 correctedPos(glm::vec2 pos);
 	glm::vec2 correctedMouse();
@@ -100,6 +102,7 @@ private:
 
 	Resource::Font* font;
 	Resource::Texture buttonTexture;
+	Resource::Texture colourPixel;
 
 	bool isPaused = false;
 	PauseMenu pauseMenu;
