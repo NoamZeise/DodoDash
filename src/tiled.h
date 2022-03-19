@@ -30,6 +30,8 @@ struct Properties
 	bool poacher = false;
 	bool goal = false;
 	bool fruit = false;
+	bool crab = false;
+	bool switching = false;
 };
 
 //Match names and types of properties set in Tiled

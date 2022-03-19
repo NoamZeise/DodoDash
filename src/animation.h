@@ -50,6 +50,24 @@ public:
 		}
 	}
 
+	Animation(Resource::Texture texture, float delay, float FrameWidth, std::vector<float> customDelays)
+	{
+		frames.resize(texture.dim.x / FrameWidth);
+		if(customDelays.size() != frames.size())
+			throw std::runtime_error("Custom delays doesnt match frame count!");
+
+		
+		for(unsigned int i = 0; i < frames.size(); i++)
+		{
+			frames[i].tex = texture;
+			frames[i].textureOffset = glmhelper::calcTexOffset
+				(texture.dim, glm::vec4(i * FrameWidth, 0, FrameWidth, texture.dim.y));
+			frames[i].delay = delay + customDelays[i];
+			totalDuration += delay;
+			frames[i].size = glm::vec2(FrameWidth, texture.dim.y);
+		}
+	}
+
 	Animation(Resource::Texture texture, float delay, float FrameWidth, bool invertX)
 	{
 		frames.resize(texture.dim.x / FrameWidth);
@@ -137,6 +155,11 @@ public:
 		return current;
 	}
 
+	bool complete()
+	{
+		return done;
+	}
+
 	void setFrame(unsigned int index)
 	{
 		if(index >= frames.size())
@@ -153,6 +176,64 @@ public:
 			frameTimer = 0;
 			current++;
 			if(current >= frames.size())
+				current = 0;
+		}
+		return frames[current];
+	}
+
+	Frame PlayThenSkipToFrame(Timer &timer, int frameSkip)
+	{
+		frameTimer += timer.FrameElapsed();
+		if(frameTimer > frames[current].delay)
+		{
+			frameTimer = 0;
+			current++;
+			if(current >= frames.size())
+				current = frameSkip;
+		}
+		return frames[current];
+	}
+
+	Frame PlayOnceSkipToFrame(Timer &timer, int frameSkip)
+	{
+		frameTimer += timer.FrameElapsed();
+		if(current < frameSkip)
+			current = frameSkip;
+		if(frameTimer > frames[current].delay)
+		{
+			frameTimer = 0;
+			current++;
+			if(current >= frames.size())
+				current = frames.size() - 1;
+		}
+		return frames[current];
+	}
+
+	Frame PlayOnceToFrame(Timer &timer, int frameEnd)
+	{
+		frameTimer += timer.FrameElapsed();
+		if(current > frameEnd)
+			current = frameEnd;
+		if(frameTimer > frames[current].delay)
+		{
+			frameTimer = 0;
+			current++;
+			if(current > frameEnd)
+				current = frameEnd;
+		}
+		return frames[current];
+	}
+
+	Frame PlayToFrame(Timer &timer, int frameEnd)
+	{
+		frameTimer += timer.FrameElapsed();
+		if(current > frameEnd)
+			current = 0;
+		if(frameTimer > frames[current].delay)
+		{
+			frameTimer = 0;
+			current++;
+			if(current > frameEnd)
 				current = 0;
 		}
 		return frames[current];

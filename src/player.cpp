@@ -5,16 +5,16 @@ Player::Player(Render &render, float scale)
 	this->scale = scale;
 	hitBoxOffset *= scale;
 	Resource::Texture run = render.LoadTexture("textures/dodo/run.png");
-	animations.RunRight = Animation(run, 50.0f, 200, false);
-	animations.RunLeft = Animation(run, 50.0f, 200, true);
+	animations.RunRight = Animation(run, 100.0f, 320, false);
+	animations.RunLeft = Animation(run, 100.0f, 320, true);
 	Resource::Texture jump = render.LoadTexture("textures/dodo/jump.png");
-	animations.JumpRight = Animation(jump, 60.0f, 200, false);
-	animations.JumpLeft = Animation(jump, 60.0f, 200, true);
-	Resource::Texture floatTex = render.LoadTexture("textures/dodo/float.png");
-	animations.FloatRight = Animation(floatTex, 50.0f, 200, false);
-	animations.FloatLeft = Animation(floatTex, 50.0f, 200, true);
+	animations.JumpRight = Animation(jump, 90.0f, 320, false);
+	animations.JumpLeft = Animation(jump, 90.0f, 320, true);
+	Resource::Texture flutterTex = render.LoadTexture("textures/dodo/flutter.png");
+	animations.FlutterRight = Animation(flutterTex, 100.0f, 320, false);
+	animations.FlutterLeft = Animation(flutterTex, 100.0f, 320, true);
+	animations.LayEgg = Animation(render.LoadTexture("textures/dodo/layEgg.png"), 250.0f, 320, {0, 200, 100, 0, 0, 0,0,0,0,0,0});
 	currentAnimation = animations.RunRight;
-	position = glm::vec2(100, 300);
 	velocity = glm::vec2(0, 0);
 }
 
@@ -43,6 +43,7 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 		sinceJumpPressed += timer.FrameElapsed();
 		if(jumpTimer < jumpDelay)
 		{
+			jumping = true;
 			if(sinceGroundedTimer < sinceGroundedDelay && unpressedJump)
 			{
 				velocity.y = initalJumpVel;
@@ -124,8 +125,10 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 	if(velocity.y < jumpMax)
 		velocity.y = jumpMax;
 
+	if(layingEgg)
+		velocity = glm::vec2(0.0f);
 	movement(timer, colliders);
-
+	
 	animate(timer);
 	
 	drawRect.x = position.x;
@@ -148,6 +151,7 @@ void Player::movement(Timer &timer, std::vector<glm::vec4> &colliders)
 		jumpTimer = 0.0f;
 		boostTimer = 0.0f;
 	}
+	
 	position.x += velocity.x * timer.FrameElapsed();
 	hitRect = glm::vec4(position.x + hitBoxOffset.x, position.y + hitBoxOffset.y, hitBoxOffset.z, hitBoxOffset.w);
 	glm::vec4 rect = colliding(colliders, hitRect);
@@ -173,6 +177,7 @@ void Player::movement(Timer &timer, std::vector<glm::vec4> &colliders)
 		float change = 0;
 		if(velocity.y > 0)
 		{
+			jumping = false;
 			grounded = true;
 			isFloating = false;
 			isBoosting = false;
@@ -210,6 +215,15 @@ glm::vec4 Player::colliding(std::vector<glm::vec4> &colliders, glm::vec4 checkRe
 
 void Player::animate(Timer &timer)
 {
+	if(layingEgg)
+	{
+		currentFrame = currentAnimation.PlayOnce(timer);
+		if(currentAnimation.complete())
+		{
+			EggDone = true;
+		}
+		return;
+	}
 	if(jumpTimer > 0)
 	{
 		if(isFloating)
@@ -217,21 +231,21 @@ void Player::animate(Timer &timer)
 			if(justFloat)
 			{
 				if(facingRight)
-					currentAnimation = animations.FloatRight;
+					currentAnimation = animations.FlutterRight;
 				else
-					currentAnimation = animations.FloatLeft;
+					currentAnimation = animations.FlutterLeft;
 
 				justFloat = false;
 				justJumped = true;
 			}
 			if(moveDir == 1 && prevMoveDir != 1)
 			{
-				setAnimationPreserveFrame(animations.FloatRight);
+				setAnimationPreserveFrame(animations.FlutterRight);
 				facingRight = true;
 			}
 			else if(moveDir == -1 && prevMoveDir != -1)
 			{
-				setAnimationPreserveFrame(animations.FloatLeft);
+				setAnimationPreserveFrame(animations.FlutterLeft);
 				facingRight = false;
 			}
 		}
@@ -244,8 +258,15 @@ void Player::animate(Timer &timer)
 			else
 				currentAnimation = animations.JumpLeft;
 
-			if(!jumpPressed || !justFloat)
-				currentAnimation.setFrame(2);
+			if(velocity.x != 0)
+			{
+				currentAnimation.setFrame(3);
+			}
+
+		//	if(!jumpPressed || !justFloat)
+		//	{
+			//	currentAnimation.setFrame(2);
+		//	}
 
 			justJumped = false;
 			justFloat = true;
@@ -263,8 +284,12 @@ void Player::animate(Timer &timer)
 		}
 		}
 
-
-		currentFrame = currentAnimation.PlayOnce(timer);
+		if(isFloating)
+			currentFrame = currentAnimation.PlayToFrame(timer, 1);
+		else if(velocity.y > 0)
+			currentFrame = currentAnimation.PlayOnceSkipToFrame(timer, 4);
+		else if(velocity.y < 0)
+			currentFrame = currentAnimation.PlayOnceToFrame(timer, 4);
 	}
 	else
 	{
@@ -276,6 +301,9 @@ void Player::animate(Timer &timer)
 				currentAnimation = animations.RunRight;
 			else
 				currentAnimation = animations.RunLeft;
+			
+			if(velocity.x != 0)
+				currentAnimation.setFrame(2);
 		}
 		if(moveDir == 1 && prevMoveDir != 1)
 		{
@@ -289,7 +317,7 @@ void Player::animate(Timer &timer)
 		}
 
 		if(velocity.x > 0.05f || velocity.x < -0.05f)
-		currentFrame = currentAnimation.Play(timer);
+			currentFrame = currentAnimation.PlayThenSkipToFrame(timer, 2);
 		else
 		{
 			currentAnimation.Reset();
@@ -301,7 +329,7 @@ void Player::animate(Timer &timer)
 void Player::Draw(Render &render)
 { 
 	if(invincibilityTimer < invincibilityDelay && invFlash)
-		render.DrawQuad(currentFrame.tex, modelMat, glm::vec4(5.0f, 5.0f, 5.0f, 1.0f), currentFrame.textureOffset);
+		render.DrawQuad(currentFrame.tex, modelMat, glm::vec4(5.0f, 1.0f, 1.0f, 1.0f), currentFrame.textureOffset);
 	else
 		render.DrawQuad(currentFrame.tex, modelMat, glm::vec4(1.0f), currentFrame.textureOffset);
 	//render.DrawQuad(Resource::Texture(), glmhelper::calcMatFromRect(hitRect, 0, 5.0f), glm::vec4(1.0f));

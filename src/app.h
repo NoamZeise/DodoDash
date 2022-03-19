@@ -31,6 +31,8 @@
 #include "mapobj.h"
 #include "menu.h"
 
+#include "cutscene.h"
+
 //#define TIME_APP_DRAW_UPDATE
 //#define TIME_GAMELOOP
 //#define MULTI_UPDATE_ON_SLOW_DRAW
@@ -96,6 +98,7 @@ private:
 	int currentMapIndex = 0;
 	bool finishedAllMaps = false;
 	Player player;
+	bool playerLastJump = false;
 	Map currentMap;
 	float zoom = 1.0f;	
 	float mapScale = 1.0f;
@@ -107,6 +110,17 @@ private:
 	bool isPaused = false;
 	PauseMenu pauseMenu;
 
+	Opening openingCutscene;
+	Extinct extinctCutscene;
+	Victory victoryCutscene;
+	Cutscene activeCutsene;
+	bool inCutscene = false;
+	bool playedVictory = false;
+
+	bool didTransition = false;
+	float transitionDelay = 3000.0f;
+	float transitionTimer = 3001.0f;
+	glm::mat4 fadeMat;
 };
 
 #endif

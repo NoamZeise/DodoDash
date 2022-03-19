@@ -38,7 +38,6 @@ App::App()
 
 	loadAssets();
 	lifeTexTransform.resize(player.getHpMax());
-	//audioManager.Play("audio/Dodo Hornpipe Demo.ogg", true, 0.5f);
 	pauseMenu = PauseMenu(colourPixel, buttonTexture, font);
 	finishedDrawSubmit = true;
 }
@@ -57,9 +56,18 @@ App::~App()
 void App::loadAssets()
 {
 	font = mRender->LoadFont("textures/ui/menu/PermanentMarker-Regular.ttf");
-	currentMapIndex = 1;
-	maps.push_back(Map("maps/level1-jumptut.tmx", mRender, mapScale, font, 0.015f));
-	maps.push_back(Map("maps/level2-poachertut.tmx", mRender, mapScale, font, 0.02f));
+
+	openingCutscene = Opening(*mRender, font);
+	victoryCutscene = Victory(*mRender, font);
+	extinctCutscene = Extinct(*mRender, font);
+	audioManager.Play("audio/Extinction Demo V3.wav", false, 1.0f);
+	activeCutsene = openingCutscene;
+	inCutscene = true;
+
+	currentMapIndex = 2;
+	maps.push_back(Map("maps/level1.tmx", mRender, mapScale, font, 0.03f));
+	maps.push_back(Map("maps/level2.tmx", mRender, mapScale, font, 0.04f));
+	maps.push_back(Map("maps/level3.tmx", mRender, mapScale, font, 0.08f));
 	currentMap = maps[currentMapIndex];
 	player = Player(*mRender, 0.6f);
 	poacher = Poacher(*mRender, mapScale, glm::vec4(0, 0, 0, 0));
@@ -69,19 +77,36 @@ void App::loadAssets()
 	noLifeTex = mRender->LoadTexture("textures/ui/gameplay/darkfeather.png");
 	buttonTexture = mRender->LoadTexture("textures/ui/menu/button.png");
 	colourPixel = mRender->LoadTexture("textures/ui/pixel.png");
-	loadMap();
 	mRender->endResourceLoad();
 }
 
 void App::loadMap()
 {
+	switch(currentMapIndex)
+	{
+		case 0:
+			audioManager.StopAll();
+			audioManager.Play("audio/Dodo Hornpipe 1st Level Demo V2.wav", true, 0.5f);
+			break;
+		case 1:
+			audioManager.StopAll();
+			audioManager.Play("audio/Dodo Hornpipe 2nd Level Demo.wav", true, 0.5f);
+			break;
+		case 2:
+			audioManager.StopAll();
+			audioManager.Play("audio/Dodo Hornpipe 3nd Level Demo.wav", true, 0.5f);
+			break;
+		case 3:
+			audioManager.StopAll();
+			audioManager.Play("audio/Dodo Hornpipe 4th Level Demo.wav", true, 0.5f);
+			break;
+
+	}
 	currentMap.Reset();
 	player.Reset(currentMap.getPlayerSpawn());
 	bullets.clear();
 	poachers.clear();
 	fruits.clear();
-	staticColliders.clear();
-	staticColliders = currentMap.getColliders();
 	cam.setCameraMapRect(currentMap.getMapRect());
 	cam.SetCameraOffset(player.getMidPoint());
 	mapGoal.setDrawRect(currentMap.getGoal(), mapScale);
@@ -104,8 +129,11 @@ void App::nextMap()
 	currentMapIndex++;
 	if(currentMapIndex >= maps.size())
 	{
-		currentMapIndex = maps.size() - 1; 
+		currentMapIndex = 0;
 		finishedAllMaps = true;
+		//didTransition = true;
+		//transitionTimer = transitionDelay + 1;
+		return;
 	}
 	currentMap = maps[currentMapIndex];
 	loadMap();
@@ -147,6 +175,48 @@ void App::update()
 #ifdef TIME_APP_DRAW_UPDATE
 	auto start = std::chrono::high_resolution_clock::now();
 #endif
+	transitionTimer += timer.FrameElapsed();
+
+	if(finishedAllMaps && !inCutscene && !playedVictory)
+	{
+		playedVictory = true;
+		inCutscene = true;
+		audioManager.StopAll();
+		//audioManager.Play();
+		activeCutsene = victoryCutscene;
+		activeCutsene.Reset();
+	}
+	else if(finishedAllMaps && !inCutscene)
+	{
+		glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+	}
+	
+	if(transitionTimer >= transitionDelay / 2)
+	{
+
+	if(inCutscene)
+	{
+		if(activeCutsene.isOver())
+		{
+			if(!didTransition)
+			{
+				didTransition = true;
+				transitionTimer = 0.0f;
+			}
+			else
+			{
+			didTransition = false;
+			std::cout << "end cutscene" << std::endl;
+			audioManager.StopAll();
+			inCutscene = false;
+			activeCutsene = Cutscene();
+			loadMap();
+			}
+		}
+	}
+
+	if(timer.FrameElapsed() < 100)
+	{
 	glfwPollEvents();
 
 	if (input.Keys[GLFW_KEY_F] && !previousInput.Keys[GLFW_KEY_F])
@@ -154,7 +224,8 @@ void App::update()
 		if (glfwGetWindowMonitor(mWindow) == nullptr)
 		{
 			const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-			glfwSetWindowMonitor(mWindow, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
+			if((float)mode->width / (float)mode->height == (float)settings::TARGET_WIDTH / (float)settings::TARGET_HEIGHT)
+				glfwSetWindowMonitor(mWindow, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
 		}
 		else
 		{
@@ -168,10 +239,27 @@ void App::update()
 		pauseToggled();
 	}
 
-	if(!isPaused)
-		gameUpdate();
+	if(!inCutscene)
+	{
+
+		if(!isPaused)
+			gameUpdate();
+	}
+	else
+	{
+		if(!isPaused)
+		{
+			activeCutsene.Update(timer, input);
+			cam.SetCameraOffset(glm::vec2(settings::TARGET_WIDTH/2, settings::TARGET_HEIGHT/2));
+		}
+	}
+
+	} //skip on long loop
+
+	}//transition
 
 	postUpdate();
+	
 #ifdef TIME_APP_DRAW_UPDATE
 	auto stop = std::chrono::high_resolution_clock::now();
 	std::cout
@@ -183,18 +271,53 @@ void App::update()
 
 void App::gameUpdate()
 {
+	staticColliders = currentMap.getColliders();
 	if(!player.isAlive())
 	{
-		loadMap();
+		if(!didTransition)
+		{
+			
+			didTransition = true;
+			transitionTimer = 0.0f;
+			audioManager.StopAll();
+			audioManager.Play("audio/Dodo You Died V2.wav", false, 0.7f);
+		}
+		else
+		{
+			didTransition = false;
+			loadMap();
+		}
 	}
 
 	player.Update(timer, input, staticColliders);
+
+	if(!playerLastJump && player.isJumping())
+	{
+		currentMap.BlockSwitch();
+	}
+	playerLastJump = player.isJumping();
+
 	auto playerMid = player.getMidPoint();
 	auto playerHitBox = player.getHitBox();
 	mapGoal.Update(timer, cam.getCameraArea());
 	if(gh::colliding(mapGoal.getHitBox(), playerHitBox))
 	{
-		nextMap();
+		player.EndLevel();
+		if(player.EggFinished())
+		{
+			if(!didTransition)
+			{
+				didTransition = true;
+				transitionTimer = 0.0f;
+				audioManager.StopAll();
+				audioManager.Play("audio/Dodo You Lived V2.wav", false, 0.7f);
+			}
+			else
+			{
+				didTransition = false;
+				nextMap();
+			}
+		}
 	}
 
 	for(int i = 0; i < fruits.size(); i++)
@@ -208,7 +331,7 @@ void App::gameUpdate()
 	}
 	if(playerHitBox.y > currentMap.getMapRect().w || playerMid.y > currentMap.getWaterLevel())
 	{
-		loadMap();
+		player.kill();
 	}
 	for (int i = 0; i < poachers.size(); i++)
 	{
@@ -254,6 +377,9 @@ void App::postUpdate()
 	time += timer.FrameElapsed();
 	timer.Update();
 
+	if(!inCutscene)
+	{
+
 	for(int i = 0; i < lifeTexTransform.size(); i++)
 	{
 		lifeTexTransform[i] = glmhelper::calcMatFromRect(
@@ -263,6 +389,8 @@ void App::postUpdate()
 				lifeTex.dim.x,
 				 lifeTex.dim.y), 0.0f, 2.0f);
 	}
+	}
+
 	if(isPaused)
 	{
 		pauseMenu.Update(cam.getCameraArea(), correctedMouse(), input, previousInput, timer);
@@ -275,6 +403,11 @@ void App::postUpdate()
 		if(pauseMenu.isExit())
 			glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
 	}
+
+	if(transitionTimer < transitionDelay)
+		fadeMat = glmhelper::calcMatFromRect(glm::vec4((int)cam.getCameraArea().x, (int)cam.getCameraArea().y, 
+				settings::TARGET_WIDTH, settings::TARGET_HEIGHT), 0.0f, 10.0f);
+
 	mRender->set2DViewMatrix(cam.getViewMat());
 	previousInput = input;
 	input.offset = 0;
@@ -306,10 +439,25 @@ void App::draw()
 
 	mRender->begin2DDraw();
 
-	gameDraw();
+	if(inCutscene)
+	{
+		activeCutsene.Draw(*mRender);
+	}
+	else
+	{
+		gameDraw();
+	}
 
 	if(isPaused)
 		pauseMenu.Draw(*mRender);
+
+	if(transitionTimer < transitionDelay)
+	{
+		if(transitionTimer < transitionDelay/2)
+			mRender->DrawQuad(colourPixel, fadeMat, glm::vec4(0.0f, 0.0f, 0.0f, (transitionTimer / transitionDelay) *2));
+		else
+			mRender->DrawQuad(colourPixel, fadeMat, glm::vec4(0.0f, 0.0f, 0.0f, 2.0f - (transitionTimer / transitionDelay)*2 ));
+	}
 
 	submitDraw = std::thread(&Render::endDraw, mRender, std::ref(finishedDrawSubmit));
 

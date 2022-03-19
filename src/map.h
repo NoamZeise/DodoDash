@@ -52,14 +52,35 @@ void Update(glm::vec4 cameraRect, Timer &timer);
 void Draw(Render &render);
 void Reset()
 {
+	if(switched)
+		BlockSwitch();
 	waterLevel = mapRect.w;
-	waterTexLevel = waterLevel - map.tileHeight * 1;
+	waterTexLevel = waterLevel - map.tileHeight * 2.5;
 	waterMove = 0.0f;
 }
 glm::vec4 getMapRect() { return mapRect; }
-std::vector<glm::vec4> getColliders() { return colliders; }
+std::vector<glm::vec4> getColliders() 
+{
+	auto allColliders = colliders;
+	for(auto &s: switchBlocks)
+	{
+		if(s.active)
+			allColliders.push_back(s.rect);
+	} 
+	return allColliders; 
+}
+void BlockSwitch()
+{
+	switched = !switched;
+	for(auto &s: switchBlocks)
+	{
+		s.active = !s.active;
+		s.tileIndex += s.active ? -3 : 3;
+	} 
+}
 std::vector<glm::vec4> getPoacherRects() { return poachers; }
 std::vector<glm::vec4> getFruitRect() { return fruits; }
+std::vector<glm::vec4> getCrabSpawns() { return crabs; }
 glm::vec2 getPlayerSpawn() { return playerSpawn; };
 glm::vec4 getGoal() { return goal; }
 float getWaterLevel() { return waterLevel; }
@@ -81,12 +102,28 @@ private:
 		glm::vec4 texOffset;
 	};
 
+	struct Switch
+	{
+		Switch(int index, glm::vec4 rect,glm::mat4 mat, bool active)
+		{
+			this->tileIndex = index;
+			this->rect = rect;
+			this->mat = mat;
+			this->active = active;
+		}
+		int tileIndex;
+		glm::vec4 rect;
+		glm::mat4 mat;
+		bool active = true;
+	};
+
 	tiled::Map map;
 	std::vector<std::vector<glm::mat4>> tileMats;
 	std::vector<MapText> mapTexts;
 	std::vector<glm::vec4> tileRects;
 	std::vector<glm::vec4> poachers;
 	std::vector<glm::vec4> fruits;
+	std::vector<glm::vec4> crabs;
 	std::vector<Tile> tiles;
 	//std::vector<glm::vec4> cameraRects;
 	glm::vec4 mapRect;
@@ -97,6 +134,7 @@ private:
 	glm::vec4 lastCamRect;
 
 	std::vector<glm::vec4> colliders;
+	std::vector<Switch> switchBlocks;
 
 	std::vector<TileDraw> toDraw;
 
@@ -109,7 +147,7 @@ private:
 	float waterRiseRate = 0.01f;
 	float waterMoveRate = -0.05f;
 	float waterMove = 0.0f;
-
+	bool switched = false;
 };
 
 

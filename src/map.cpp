@@ -27,9 +27,12 @@ Map::Map(std::string filename, Render* render, float scale, Resource::Font* mapF
 		}
 		
 
+	int smallestSwitch = 0;
+	int layerIndex = -1;
 	for(const auto &layer: map.layers)
 	{
-		if(layer.props.collidable)
+		layerIndex++;
+		if(layer.props.collidable  || layer.props.switching)
 		{
 			size_t i = 0;
 			for(unsigned int y = 0; y < map.height; y++)
@@ -37,9 +40,25 @@ Map::Map(std::string filename, Render* render, float scale, Resource::Font* mapF
 				{
 					if(layer.data[i] != 0 && layer.props.collidable)
 						colliders.push_back(glm::vec4(x * map.tileWidth, y * map.tileHeight, map.tileWidth, map.tileHeight));
+					if(layer.data[i] != 0 && layer.props.switching)
+					{
+						if(smallestSwitch == 0 || layer.data[i] < smallestSwitch)
+							smallestSwitch = layer.data[i];
+						switchBlocks.push_back(
+							Switch(layer.data[i],
+							glm::vec4(x * map.tileWidth, y * map.tileHeight, map.tileWidth, map.tileHeight),
+							tileMats[layerIndex][i],
+							false));
+					}
 					i++;
 				}
 		}
+	}
+
+	for (auto &s: switchBlocks)
+	{
+		if(s.tileIndex < smallestSwitch + 3)
+			s.active = true;
 	}
 
 	tiles.resize(map.totalTiles + 1);
@@ -73,6 +92,8 @@ Map::Map(std::string filename, Render* render, float scale, Resource::Font* mapF
 				goal = glm::vec4(obj.x, obj.y, obj.w, obj.h);
 			if(obj.props.fruit || objGroup.props.fruit)
 				fruits.push_back(glm::vec4(obj.x, obj.y, obj.w, obj.h));
+			if(obj.props.crab || objGroup.props.crab)
+				crabs.push_back(glm::vec4(obj.x, obj.y, obj.w, obj.h));
 		}
 	}
 	
@@ -112,7 +133,7 @@ void Map::Update(glm::vec4 cameraRect, Timer &timer)
 	for(unsigned int tile = 0; tile < tileRects.size(); tile++)
 		if(gh::colliding(cameraRect, tileRects[tile]))
 			for(unsigned int layer = 0; layer < map.layers.size(); layer++)
-				if(map.layers[layer].data[tile] != 0)
+				if(!map.layers[layer].props.switching && map.layers[layer].data[tile] != 0)
 					toDraw.push_back(TileDraw(tiles[map.layers[layer].data[tile]].texture, tileMats[layer][tile], tiles[map.layers[layer].data[tile]].tileRect));
 	
 }
@@ -125,8 +146,6 @@ void Map::Draw(Render &render)
 		render.DrawQuad(Resource::Texture(), glmhelper::calcMatFromRect(rect, 0, 5.0f), glm::vec4(1.0f));
 	}
 	#endif
-
-	render.DrawQuad(water, waterMat, glm::vec4(1.0f), waterTexOffset);
 	for(auto &txt: mapTexts)
 	{
 		if(txt.toDraw)
@@ -139,4 +158,11 @@ void Map::Draw(Render &render)
 	{
 		render.DrawQuad(toDraw[i].tex, toDraw[i].tileMat, glm::vec4(1.0f), toDraw[i].texOffset);
 	}
+
+	for(unsigned int i = 0; i < switchBlocks.size(); i++)
+	{
+		render.DrawQuad(tiles[switchBlocks[i].tileIndex].texture, switchBlocks[i].mat, glm::vec4(1.0f), tiles[switchBlocks[i].tileIndex].tileRect);
+	}
+
+	render.DrawQuad(water, waterMat, glm::vec4(1.0f, 1.0f, 1.0f, 0.9f), waterTexOffset);
 }

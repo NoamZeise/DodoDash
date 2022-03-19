@@ -45,6 +45,8 @@ public:
 		hp = maxHp;
 		invincibilityTimer = invincibilityDelay;
 		position = pos;
+		layingEgg = false;
+		EggDone = false;
 	}
 	bool isAlive() { return hp > 0; }
 	void damage() 
@@ -54,6 +56,10 @@ public:
 			invincibilityTimer = 0;
 			hp--;
 		}
+	}
+	void kill()
+	{
+		hp = 0;
 	}
 	void addHP(int i)
 	{
@@ -65,6 +71,23 @@ public:
 	void setJumpPressed()
 	{
 		sinceJumpPressed = 100.0f;
+	}
+	bool  isJumping() 
+	{
+		return jumping;
+	}
+	void EndLevel()
+	{
+		if(!layingEgg)
+		{
+			position.y += 40.0f;
+			currentAnimation = animations.LayEgg;
+			layingEgg = true;
+		}
+	}
+	bool EggFinished()
+	{
+		return EggDone;
 	}
 	int getHp() { return hp; }
 	int getHpMax() { return maxHp; }
@@ -81,8 +104,9 @@ struct Animations
 	Animation RunLeft;
 	Animation JumpRight;
 	Animation JumpLeft;
-	Animation FloatRight;
-	Animation FloatLeft;
+	Animation FlutterRight;
+	Animation FlutterLeft;
+	Animation LayEgg;
 };
 Animations animations;
 Frame currentFrame;
@@ -91,7 +115,7 @@ Animation currentAnimation;
 glm::vec2 position;
 glm::vec2 prevPos;
 glm::vec2 velocity;
-glm::vec4 hitBoxOffset = glm::vec4(40, 20, 120, 180);
+glm::vec4 hitBoxOffset = glm::vec4(80, 100, 160, 175);
 glm::vec4 hitRect;
 float xAcceleration = 0.0025f;
 float yAcceleration = 0.0f;
@@ -122,11 +146,11 @@ float sinceJumpPressed = 0.0f;
 
 bool invFlash = false;
 
-float invincibilityDelay = 1000.0f;
+float invincibilityDelay = 1500.0f;
 float invincibilityTimer = invincibilityDelay;
 
 bool grounded = false;
-bool jumped = false;
+bool jumping = false;
 
 int moveDir = 0;
 int prevMoveDir = 0;
@@ -143,6 +167,9 @@ bool isFloating = false;
 bool isBoosting = false;
 
 float changeAmount = 0.25f;
+
+bool layingEgg = false;
+bool EggDone = false;
 
 glm::vec4 drawRect;
 glm::mat4 modelMat;

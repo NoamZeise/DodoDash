@@ -5,9 +5,9 @@ Poacher::Poacher(Render &render, float scale, glm::vec4 position)
 	this->scale = scale;
 	bullet = Bullet(render, 0.25f);
 
-	animations.shootRight = Animation(render.LoadTexture("textures/enemy/poacherShoot.png"), 80.0f, 200, true);
+	animations.shootRight = Animation(render.LoadTexture("textures/enemy/poacherShoot.png"), 80.0f, 320, true);
 	animations.dieRight = Animation(render.LoadTexture("textures/enemy/poacherDie.png"), 80.0f, 200, true);
-	animations.shootLeft = Animation(render.LoadTexture("textures/enemy/poacherShoot.png"), 80.0f, 200, false);
+	animations.shootLeft = Animation(render.LoadTexture("textures/enemy/poacherShoot.png"), 80.0f, 320, false);
 	animations.dieLeft = Animation(render.LoadTexture("textures/enemy/poacherDie.png"), 80.0f, 200, false);
 
 	currentAnimation = animations.shootLeft;
@@ -67,7 +67,7 @@ void Poacher::Update(Timer &timer, glm::vec4 mapRect, glm::vec2 playerPos, std::
 			shootTimer += timer.FrameElapsed();
 			currentFrame = currentAnimation.PingPongOnce(timer);
 
-			if(currentAnimation.getIndex() == currentAnimation.maxIndex())
+			if(currentAnimation.getIndex() == 3)
 			{
 				if(!shot)
 				{
