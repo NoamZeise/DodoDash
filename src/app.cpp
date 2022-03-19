@@ -93,6 +93,9 @@ void App::loadAssets()
 	noLifeTex = mRender->LoadTexture("textures/ui/gameplay/darkfeather.png");
 	buttonTexture = mRender->LoadTexture("textures/ui/menu/button.png");
 	colourPixel = mRender->LoadTexture("textures/ui/pixel.png");
+	bgBeach = mRender->LoadTexture("textures/bg/beach.png");
+	bgBeachFar = mRender->LoadTexture("textures/bg/beachFar.png");
+	bgCloud = mRender->LoadTexture("textures/bg/clouds.png");
 	mRender->endResourceLoad();
 }
 
@@ -101,6 +104,9 @@ void App::loadMap()
 	switch(currentMapIndex)
 	{
 		case 0:
+			backgrounds.push_back(Background(bgBeachFar, 400, 0.9, -6.0f, currentMap.getMapRect()));
+			backgrounds.push_back(Background(bgBeach, 600, 0.7, -5.0f, currentMap.getMapRect()));
+			backgrounds.push_back(Background(bgCloud, 100, 0.5, -4.0f, currentMap.getMapRect()));
 			audioManager.StopAll();
 			audioManager.Play("audio/Dodo Hornpipe 1st Level Demo V2.wav", true, 0.5f);
 			break;
@@ -197,6 +203,7 @@ void App::update()
 #ifdef TIME_APP_DRAW_UPDATE
 	auto start = std::chrono::high_resolution_clock::now();
 #endif
+
 	transitionTimer += timer.FrameElapsed();
 
 	if(finishedAllMaps && !inCutscene && !playedVictory)
@@ -408,6 +415,8 @@ void App::gameUpdate()
 	}
 
 	cam.Target(player.getMidPoint(), timer);
+	for(auto&& bg: backgrounds)
+		bg.Update(timer, cam.getCameraArea());
 	currentMap.Update(cam.getCameraArea(), timer);
 }
 
@@ -500,9 +509,6 @@ void App::draw()
 		gameDraw();
 	}
 
-	if(isPaused)
-		pauseMenu.Draw(*mRender);
-
 	if(transitionTimer < transitionDelay)
 	{
 		if(transitionTimer < transitionDelay/2)
@@ -510,6 +516,9 @@ void App::draw()
 		else
 			mRender->DrawQuad(colourPixel, fadeMat, glm::vec4(0.0f, 0.0f, 0.0f, 2.0f - (transitionTimer / transitionDelay)*2 ));
 	}
+
+	if(isPaused)
+		pauseMenu.Draw(*mRender);
 
 	submitDraw = std::thread(&Render::endDraw, mRender, std::ref(finishedDrawSubmit));
 
@@ -524,6 +533,10 @@ void App::draw()
 
 void App::gameDraw()
 {
+
+	for(auto&& bg: backgrounds)
+		bg.Draw(*mRender);
+
 	currentMap.Draw(*mRender);
 
 	for (auto& poacher: poachers)

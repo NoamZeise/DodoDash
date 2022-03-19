@@ -122,20 +122,32 @@ void Map::Update(glm::vec4 cameraRect, Timer &timer)
 	if(waterMove > mapRect.z)
 		waterMove = 0.0f;
 	waterTexOffset = glmhelper::calcTexOffset(water.dim, glm::vec4(mapRect.x + waterMove, mapRect.y, mapRect.z, water.dim.y));
-	bgWaterTexOffset = glmhelper::calcTexOffset(water.dim, glm::vec4(mapRect.x - (waterMove*1.2), mapRect.y, mapRect.z, water.dim.y));
+	bgWaterTexOffset = glmhelper::calcTexOffset(water.dim, glm::vec4(mapRect.x + (waterMove*1.2), mapRect.y, -mapRect.z, water.dim.y));
 	waterMat = glmhelper::calcMatFromRect(glm::vec4(0, waterTexLevel, mapRect.z, water.dim.y), 0.0f, 2.0);
-	bgWaterMat = glmhelper::calcMatFromRect(glm::vec4(0, waterTexLevel, mapRect.z, water.dim.y), 0.0f, -5.0);
+	bgWaterMat = glmhelper::calcMatFromRect(glm::vec4(0, waterTexLevel - 80, mapRect.z, water.dim.y), 0.0f, -4.0);
 
 	for(auto &txt: mapTexts)
 	{
 		txt.toDraw = gh::colliding(txt.rect, cameraRect);
 	}
+	currentFrameColliders.clear();
+	for(auto &s: switchBlocks)
+	{
+		if(s.active)
+			currentFrameColliders.push_back(s.rect);
+	} 
 	toDraw.clear();
 	for(unsigned int tile = 0; tile < tileRects.size(); tile++)
 		if(gh::colliding(cameraRect, tileRects[tile]))
 			for(unsigned int layer = 0; layer < map.layers.size(); layer++)
 				if(!map.layers[layer].props.switching && map.layers[layer].data[tile] != 0)
+				{
 					toDraw.push_back(TileDraw(tiles[map.layers[layer].data[tile]].texture, tileMats[layer][tile], tiles[map.layers[layer].data[tile]].tileRect));
+					if(map.layers[layer].props.collidable)
+					{
+						currentFrameColliders.push_back(tileRects[tile]);
+					}
+				}
 	
 }
 

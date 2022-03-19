@@ -61,13 +61,7 @@ void Reset()
 glm::vec4 getMapRect() { return mapRect; }
 std::vector<glm::vec4> getColliders() 
 {
-	auto allColliders = colliders;
-	for(auto &s: switchBlocks)
-	{
-		if(s.active)
-			allColliders.push_back(s.rect);
-	} 
-	return allColliders; 
+	return currentFrameColliders; 
 }
 void BlockSwitch()
 {
@@ -133,6 +127,7 @@ private:
 
 	glm::vec4 lastCamRect;
 
+	std::vector<glm::vec4> currentFrameColliders;
 	std::vector<glm::vec4> colliders;
 	std::vector<Switch> switchBlocks;
 

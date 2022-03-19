@@ -33,6 +33,7 @@
 #include "crab.h"
 #include "mapobj.h"
 #include "menu.h"
+#include "background.h"
 
 #include "cutscene.h"
 
@@ -86,6 +87,10 @@ private:
 
 	camera::camera2D cam;
 
+	Resource::Texture bgBeach;
+	Resource::Texture bgBeachFar;
+	Resource::Texture bgCloud;
+	std::vector<Background> backgrounds;
 	std::vector<glm::vec4> staticColliders;
 	std::vector<Poacher> poachers;
 	std::vector<Bullet> bullets;
