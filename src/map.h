@@ -143,7 +143,9 @@ private:
 	float waterLevel;
 	float waterTexLevel;
 	glm::mat4 waterMat;
+	glm::mat4 bgWaterMat;
 	glm::vec4 waterTexOffset;
+	glm::vec4 bgWaterTexOffset;
 	float waterRiseRate = 0.01f;
 	float waterMoveRate = -0.05f;
 	float waterMove = 0.0f;

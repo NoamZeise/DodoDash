@@ -18,6 +18,8 @@
 #include <iostream>
 #include <thread>
 #include <atomic>
+#include <fstream>
+#include <string>
 
 #include <glmhelper.h>
 
@@ -28,6 +30,7 @@
 #include "player.h"
 #include "poacher.h"
 #include "bullet.h"
+#include "crab.h"
 #include "mapobj.h"
 #include "menu.h"
 
@@ -64,6 +67,7 @@ private:
 	void nextMap();
 	void loadMap();
 	void pauseToggled();
+	void Close();
 
 	glm::vec2 correctedPos(glm::vec2 pos);
 	glm::vec2 correctedMouse();
@@ -86,8 +90,10 @@ private:
 	std::vector<Poacher> poachers;
 	std::vector<Bullet> bullets;
 	std::vector<Fruit> fruits;
+	std::vector<Crab> crabs;
 	Poacher poacher;
 	Fruit fruit;
+	Crab crab;
 	MapGoal mapGoal;
 
 	Resource::Texture lifeTex;

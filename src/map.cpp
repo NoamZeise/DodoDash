@@ -122,8 +122,9 @@ void Map::Update(glm::vec4 cameraRect, Timer &timer)
 	if(waterMove > mapRect.z)
 		waterMove = 0.0f;
 	waterTexOffset = glmhelper::calcTexOffset(water.dim, glm::vec4(mapRect.x + waterMove, mapRect.y, mapRect.z, water.dim.y));
-
+	bgWaterTexOffset = glmhelper::calcTexOffset(water.dim, glm::vec4(mapRect.x - (waterMove*1.2), mapRect.y, mapRect.z, water.dim.y));
 	waterMat = glmhelper::calcMatFromRect(glm::vec4(0, waterTexLevel, mapRect.z, water.dim.y), 0.0f, 2.0);
+	bgWaterMat = glmhelper::calcMatFromRect(glm::vec4(0, waterTexLevel, mapRect.z, water.dim.y), 0.0f, -5.0);
 
 	for(auto &txt: mapTexts)
 	{
@@ -163,6 +164,6 @@ void Map::Draw(Render &render)
 	{
 		render.DrawQuad(tiles[switchBlocks[i].tileIndex].texture, switchBlocks[i].mat, glm::vec4(1.0f), tiles[switchBlocks[i].tileIndex].tileRect);
 	}
-
+	render.DrawQuad(water, bgWaterMat, glm::vec4(1.0f, 1.0f, 1.0f, 0.9f), bgWaterTexOffset);
 	render.DrawQuad(water, waterMat, glm::vec4(1.0f, 1.0f, 1.0f, 0.9f), waterTexOffset);
 }

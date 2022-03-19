@@ -64,7 +64,22 @@ void App::loadAssets()
 	activeCutsene = openingCutscene;
 	inCutscene = true;
 
-	currentMapIndex = 2;
+	currentMapIndex = 0;
+
+	std::ifstream savefile("save.data");
+	if (savefile.is_open())
+	{
+		int line = 0;
+		std::string currentLine;
+		while(std::getline(savefile, currentLine))
+		{
+			if(line == 0)
+				currentMapIndex = std::stoi(currentLine);
+			line++;
+		}
+		savefile.close();
+	}
+
 	maps.push_back(Map("maps/level1.tmx", mRender, mapScale, font, 0.03f));
 	maps.push_back(Map("maps/level2.tmx", mRender, mapScale, font, 0.04f));
 	maps.push_back(Map("maps/level3.tmx", mRender, mapScale, font, 0.08f));
@@ -72,6 +87,7 @@ void App::loadAssets()
 	player = Player(*mRender, 0.6f);
 	poacher = Poacher(*mRender, mapScale, glm::vec4(0, 0, 0, 0));
 	fruit = Fruit(*mRender);
+	crab = Crab(*mRender, mapScale, glm::vec4(0.0f));
 	mapGoal = MapGoal(*mRender);
 	lifeTex = mRender->LoadTexture("textures/ui/gameplay/feather.png");
 	noLifeTex = mRender->LoadTexture("textures/ui/gameplay/darkfeather.png");
@@ -121,6 +137,12 @@ void App::loadMap()
 	{
 		fruits.push_back(fruit);
 		fruits.back().setDrawRect(rect, mapScale);
+	}
+	auto crabRects = currentMap.getCrabSpawns();
+	for(const auto &rect : crabRects)
+	{
+		crabs.push_back(crab);
+		crabs.back().setCrab(rect);
 	}
 }
 
@@ -188,7 +210,7 @@ void App::update()
 	}
 	else if(finishedAllMaps && !inCutscene)
 	{
-		glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+		Close();
 	}
 	
 	if(transitionTimer >= transitionDelay / 2)
@@ -206,7 +228,6 @@ void App::update()
 			else
 			{
 			didTransition = false;
-			std::cout << "end cutscene" << std::endl;
 			audioManager.StopAll();
 			inCutscene = false;
 			activeCutsene = Cutscene();
@@ -299,7 +320,8 @@ void App::gameUpdate()
 
 	auto playerMid = player.getMidPoint();
 	auto playerHitBox = player.getHitBox();
-	mapGoal.Update(timer, cam.getCameraArea());
+	auto camArea = cam.getCameraArea();
+	mapGoal.Update(timer, camArea);
 	if(gh::colliding(mapGoal.getHitBox(), playerHitBox))
 	{
 		player.EndLevel();
@@ -320,26 +342,43 @@ void App::gameUpdate()
 		}
 	}
 
+	if(playerHitBox.y > currentMap.getMapRect().w || playerMid.y > currentMap.getWaterLevel())
+	{
+		player.kill();
+	}
+
 	for(int i = 0; i < fruits.size(); i++)
 	{
-		fruits[i].Update(timer, cam.getCameraArea());
+		fruits[i].Update(timer, camArea);
 		if(gh::colliding(fruits[i].getHitBox(), playerHitBox))
 		{
 			player.addHP(1);
 			fruits.erase(fruits.begin() + i--);
 		}
 	}
-	if(playerHitBox.y > currentMap.getMapRect().w || playerMid.y > currentMap.getWaterLevel())
+	for(int i = 0; i < crabs.size(); i++)
 	{
-		player.kill();
+		crabs[i].Update(timer, camArea, playerMid);
+		if(gh::colliding(crabs[i].getHitBox(), playerHitBox))
+		{
+			if(playerHitBox.y + playerHitBox.w/2 < crabs[i].getHitBox().y)
+			{
+				player.bounce();
+				crabs.erase(crabs.begin() + i--);
+			}
+			else
+			{
+				player.damage();
+			}
+		}
 	}
 	for (int i = 0; i < poachers.size(); i++)
 	{
-		poachers[i].Update(timer, cam.getCameraArea(), playerMid, &bullets);
+		poachers[i].Update(timer, camArea, playerMid, &bullets);
 		if(poachers[i].isAlive())
 			if(gh::colliding(playerHitBox, poachers[i].getHitBox()))
 			{
-				if(playerHitBox.y < poachers[i].getHitBox().y)
+				if(playerHitBox.y + playerHitBox.w/2 < poachers[i].getHitBox().y)
 				{
 					player.bounce();
 					poachers[i].kill();
@@ -353,7 +392,7 @@ void App::gameUpdate()
 
 	for(unsigned int i = 0; i < bullets.size(); i++)
 	{
-		bullets[i].Update(timer, cam.getCameraArea());
+		bullets[i].Update(timer, camArea);
 		if(gh::colliding(playerHitBox, bullets[i].getHitBox()))
 		{
 			player.damage();
@@ -374,8 +413,6 @@ void App::gameUpdate()
 
 void App::postUpdate()
 {
-	time += timer.FrameElapsed();
-	timer.Update();
 
 	if(!inCutscene)
 	{
@@ -401,7 +438,7 @@ void App::postUpdate()
 			pauseToggled();
 		}
 		if(pauseMenu.isExit())
-			glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
+			Close();
 	}
 
 	if(transitionTimer < transitionDelay)
@@ -409,8 +446,23 @@ void App::postUpdate()
 				settings::TARGET_WIDTH, settings::TARGET_HEIGHT), 0.0f, 10.0f);
 
 	mRender->set2DViewMatrix(cam.getViewMat());
+	time += timer.FrameElapsed();
+	timer.Update();
 	previousInput = input;
 	input.offset = 0;
+}
+
+void App::Close()
+{
+	std::ofstream savefile("save.data");
+	if (savefile.is_open())
+	{
+		savefile.seekp(0);
+		savefile << currentMapIndex;
+		savefile.close();
+	}
+	
+	glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
 }
 
 void App::pauseToggled()
@@ -476,6 +528,10 @@ void App::gameDraw()
 
 	for (auto& poacher: poachers)
 		poacher.Draw(*mRender);
+
+	for(auto& crab: crabs)
+		crab.Draw(*mRender);
+
 
 	player.Draw(*mRender);
 

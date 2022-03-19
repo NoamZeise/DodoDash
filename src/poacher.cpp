@@ -34,9 +34,9 @@ void Poacher::setPoacher(glm::vec4 position)
 	modelMat = glmhelper::calcMatFromRect(drawRect, 0.0f, 1.0f);
 }
 
-void Poacher::Update(Timer &timer, glm::vec4 mapRect, glm::vec2 playerPos, std::vector<Bullet> *bullets)
+void Poacher::Update(Timer &timer, glm::vec4 cameraRect, glm::vec2 playerPos, std::vector<Bullet> *bullets)
 {
-	if(gh::colliding(drawRect, mapRect))
+	if(gh::colliding(drawRect, cameraRect))
 		active = true;
 	else
 		active = false;

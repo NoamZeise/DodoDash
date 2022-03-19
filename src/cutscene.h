@@ -25,12 +25,15 @@ class Cutscene
 {
 public:
 	Cutscene() {}
-	Cutscene( Resource::Font* font) 
+	Cutscene( Resource::Font* font, Resource::Texture pixelColour) 
 	{ 
 		this->font = font;
+		this->pixelColour = pixelColour;
 	}
 	void Update(Timer &timer, Input &input)
 	{
+		this->pixelMat = glmhelper::calcMatFromRect(glm::vec4(0, 0, 
+			settings::TARGET_WIDTH, settings::TARGET_HEIGHT), 0.0f, 10.0f);;
 		if(currentScene.none)
 		{
 			if(index < scenes.size())
@@ -42,6 +45,7 @@ public:
 		if(currentSceneTimer > currentScene.duration)
 		{
 			index++;
+			currentSceneTimer = 0.0f;
 			currentScene = Scene();
 		}
 		for(auto& elem: currentScene.elems)
@@ -64,6 +68,10 @@ public:
 		{
 			elem.Draw(render, font);
 		}
+		if(currentSceneTimer < fadeAt)
+			render.DrawQuad(pixelColour, pixelMat, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f -  (currentSceneTimer / fadeAt)));
+		if(currentScene.duration - currentSceneTimer < fadeAt)
+			render.DrawQuad(pixelColour, pixelMat, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f - ((currentScene.duration - currentSceneTimer) / fadeAt)));
 	}
 	bool isOver()
 	{
@@ -149,19 +157,86 @@ protected:
 	Resource::Font *font;
 	bool done = false;
 	float pressingZ = 0.0f;
+	float fadeAt = 1000.0f;
+	Resource::Texture pixelColour;
+	glm::mat4 pixelMat;
 };
 
 class Opening: public Cutscene
 {
 public:
 	Opening() : Cutscene() {}
-	Opening(Render &render, Resource::Font* font) : Cutscene(font)
+	Opening(Render &render, Resource::Font* font) : Cutscene(font, render.LoadTexture("textures/ui/pixel.png"))
 	{
 		scenes = {
 				Scene(
 						{
 						SceneElem(
 							{"The Last Of The Dodos", "Testing the cutscene", "last hope of the dodos", "chosen one", "We believe in you"}, 
+							glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
+							glm::vec4(10, 1000, 100, 100), 
+							glm::vec4(10, 0, 100, 100),
+							1.0f
+							),
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(0, 0, 1920, 1080), 
+							glm::vec4(-1920, 0, 1920, 1080),
+							0.0f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(1920, 0, 1920, 1080), 
+							glm::vec4(0, 0, 1920, 1080),
+							0.0f,
+							glm::vec4(1.0f)
+							),
+							
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(0, 500, 1920, 1080), 
+							glm::vec4(-960, 100, 1920, 1080),
+							0.5f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(1920, 500, 1920, 1080), 
+							glm::vec4(960, 100, 1920, 1080),
+							0.5f,
+							glm::vec4(1.0f)
+							),
+
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(-960, 800, 1920, 1080), 
+							glm::vec4(0, 1000, 1920, 1080),
+							1.5f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(960, 800, 1920, 1080), 
+							glm::vec4(1920, 1000, 1920, 1080),
+							1.5f,
+							glm::vec4(1.0f)
+							),
+
+						SceneElem(
+							render.LoadTexture("textures/ui/pixel.png"), 
+							glm::vec4(0, 0, 1920, 1080), 
+							glm::vec4(0, 0, 1920, 1080),
+							-0.5f,
+							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
+							),
+						}, 
+					20000.0f),
+					
+					Scene(
+						{
+						SceneElem(
+							{"You can do it!", "We believe", "last hope of the dodos", "last hope of the dodos", "We believe in you", "We believe in you"}, 
 							glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
 							glm::vec4(10, 1000, 100, 100), 
 							glm::vec4(10, 0, 100, 100),
@@ -230,7 +305,7 @@ class Extinct: public Cutscene
 {
 public:
 	Extinct() : Cutscene() {}
-	Extinct(Render &render, Resource::Font* font) : Cutscene(font)
+	Extinct(Render &render, Resource::Font* font) : Cutscene(font, render.LoadTexture("textures/ui/pixel.png"))
 	{
 		scenes = {
 				Scene(
@@ -274,7 +349,7 @@ class Victory: public Cutscene
 {
 public:
 	Victory() : Cutscene() {}
-	Victory(Render &render, Resource::Font* font) : Cutscene(font)
+	Victory(Render &render, Resource::Font* font) : Cutscene(font, render.LoadTexture("textures/ui/pixel.png"))
 	{
 		scenes = {
 				Scene(
