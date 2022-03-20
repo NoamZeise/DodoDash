@@ -435,56 +435,158 @@ public:
 		scenes = {Scene(
 						{
 						SceneElem(
-							render.LoadTexture("textures/cutscene/dodo.png"), 
+							render.LoadTexture("textures/cutscene/mountain.png"), 
 							glm::vec4(0, 0, 1920, 1080), 
-							glm::vec4(-1920, 0, 1920, 1080),
-							0.0f,
-							glm::vec4(1.0f)
-							),
-						SceneElem(
-							render.LoadTexture("textures/cutscene/dodo.png"), 
-							glm::vec4(1920, 0, 1920, 1080), 
 							glm::vec4(0, 0, 1920, 1080),
 							0.0f,
 							glm::vec4(1.0f)
 							),
-							
 						SceneElem(
-							render.LoadTexture("textures/cutscene/dodo.png"), 
-							glm::vec4(0, 500, 1920, 1080), 
-							glm::vec4(-960, 100, 1920, 1080),
+							render.LoadTexture("textures/bg/Mountain/Rock.png"), 
+							glm::vec4(0, 200, 1920, 1080), 
+							glm::vec4(0, 200, 1920, 1080),
+							0.6f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(0, 900, 1920, 1080), 
+							glm::vec4(1920, 900, 1920, 1080),
+							0.7f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(-1920, 900, 1920, 1080), 
+							glm::vec4(0, 900, 1920, 1080),
+							0.7f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(500, 300, 320, 320), 
+							glm::vec4(1400, 500, 320, 320),
 							0.5f,
 							glm::vec4(1.0f)
 							),
 						SceneElem(
-							render.LoadTexture("textures/cutscene/dodo.png"), 
-							glm::vec4(1920, 500, 1920, 1080), 
-							glm::vec4(960, 100, 1920, 1080),
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(-100, -300, 320, 320), 
+							glm::vec4(1000, 500, 320, 320),
 							0.5f,
 							glm::vec4(1.0f)
 							),
-
 						SceneElem(
-							render.LoadTexture("textures/cutscene/dodo.png"), 
-							glm::vec4(-960, 800, 1920, 1080), 
-							glm::vec4(0, 1000, 1920, 1080),
-							1.5f,
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(1500, 700, 320, 320), 
+							glm::vec4(2300, 800, 320, 320),
+							0.5f,
 							glm::vec4(1.0f)
 							),
 						SceneElem(
-							render.LoadTexture("textures/cutscene/dodo.png"), 
-							glm::vec4(960, 800, 1920, 1080), 
-							glm::vec4(1920, 1000, 1920, 1080),
-							1.5f,
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(200, 100, 210, 210), 
+							glm::vec4(2220, 200, 210, 210),
+							0.4f,
 							glm::vec4(1.0f)
 							),
-
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(400, 800, 200, 200), 
+							glm::vec4(800, 1200, 200, 200),
+							0.4f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(-300, 200, 100, 100), 
+							glm::vec4(2220, 400, 100, 100),
+							0.1f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(-300, 800, 100, 100), 
+							glm::vec4(2520, 1000, 100, 100),
+							0.1f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(-100, 300, 100, 100), 
+							glm::vec4(2220, 700, 100, 100),
+							0.1f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(-300, 300, 100, 100), 
+							glm::vec4(1920, 400, 100, 100),
+							0.1f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(300, 600, 150, 150), 
+							glm::vec4(2220, 700, 150, 150),
+							0.18f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(200, 400, 100, 100), 
+							glm::vec4(2220, 700, 100, 100),
+							0.1f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(200, 400, 120, 120), 
+							glm::vec4(2220, 700, 120, 120),
+							0.15f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(1000, 100, 100, 100), 
+							glm::vec4(1920, 200, 100, 100),
+							0.1f,
+							glm::vec4(1.0f)
+							),
 						SceneElem(
 							render.LoadTexture("textures/ui/pixel.png"), 
 							glm::vec4(0, 0, 1920, 1080), 
 							glm::vec4(0, 0, 1920, 1080),
 							-0.5f,
 							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(-500, 300, 120, 120), 
+							glm::vec4(1000, 500, 120, 120),
+							0.15f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(-400, 400, 100, 100), 
+							glm::vec4(1500, 800, 100, 100),
+							0.1f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(-200, 300, 100, 100), 
+							glm::vec4(1500, 500, 100, 100),
+							0.1f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/Dodo.png"), 
+							glm::vec4(-200, 400, 120, 120), 
+							glm::vec4(1600, 800, 120, 120),
+							0.15f,
+							glm::vec4(1.0f)
 							),
 						}, 
 					7500.0f),
