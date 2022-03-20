@@ -1,4 +1,6 @@
-# Game Parade Jam 2022
+# The Last Dodo -  Game Parade Spring 2022
+
+In 1662 every life counts for this critically endangered maurician fowl. Bring the last dodo to higher ground so she can lay her eggs in peace. Dodge poacher bullets and battle habitat-altering monkeys as you race against the rising tide in this speedy platformer.
 
 ## Team
 
