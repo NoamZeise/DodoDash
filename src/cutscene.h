@@ -114,6 +114,10 @@ protected:
 			currentRect.y -= ((initialPos.y - finalPos.y) * ratio);
 			currentRect.x = (int)currentRect.x;
 			currentRect.y = (int)currentRect.y;
+			currentRect.z -= ((initialPos.z - finalPos.z) * ratio);
+			currentRect.w -= ((initialPos.w - finalPos.w) * ratio);
+			currentRect.z = (int)currentRect.z;
+			currentRect.w = (int)currentRect.w;
 			modelMat = glmhelper::calcMatFromRect(currentRect, 0.0, depth);
 		}
 		void Draw(Render &render, Resource::Font *font)
@@ -172,11 +176,24 @@ public:
 				Scene(
 						{
 						SceneElem(
-							{"The Last Of The Dodos", "Testing the cutscene", "last hope of the dodos", "chosen one", "We believe in you"}, 
-							glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
+							{"The year is 1662.", 
+							"","","On the beautiful island of Mauritius","", "one dodo fights for survival.",
+							"","",
+							"The sea is rising", "", "", "Hunters are looking for their next meal.","","",
+							"You must reach higher ground to lay your egg", "to continue your bloodline.",
+							"", "",
+							"Will you Succeed?", "Or will you be The Last Dodo?"}, 
+							glm::vec4(0.0f, -300.0f, 0.0f, 1.0f),
 							glm::vec4(10, 1000, 100, 100), 
-							glm::vec4(10, 0, 100, 100),
+							glm::vec4(10, 0.0f, 100, 100),
 							1.0f
+							),
+						SceneElem(
+							{"Hold Z to Skip"}, 
+							glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
+							glm::vec4(1500.0f, 1000.0f, 100, 100), 
+							glm::vec4(1500.0f, 1000.0f, 100, 100),
+							5.0f
 							),
 						SceneElem(
 							render.LoadTexture("textures/water.png"), 
@@ -231,16 +248,15 @@ public:
 							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
 							),
 						}, 
-					20000.0f),
-					
+					32000.0f)/*,
 					Scene(
 						{
 						SceneElem(
-							{"You can do it!", "We believe", "last hope of the dodos", "last hope of the dodos", "We believe in you", "We believe in you"}, 
+							{"Hold Z to Skip"}, 
 							glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
-							glm::vec4(10, 1000, 100, 100), 
-							glm::vec4(10, 0, 100, 100),
-							1.0f
+							glm::vec4(1500.0f, 1000.0f, 100, 100), 
+							glm::vec4(1500.0f, 1000.0f, 100, 100),
+							5.0f
 							),
 						SceneElem(
 							render.LoadTexture("textures/water.png"), 
@@ -295,7 +311,72 @@ public:
 							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
 							),
 						}, 
-					20000.0f)};
+					30000.0f)
+					Scene(
+						{
+						SceneElem(
+							{"Hold Z to Skip"}, 
+							glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
+							glm::vec4(1500.0f, 1000.0f, 100, 100), 
+							glm::vec4(1500.0f, 1000.0f, 100, 100),
+							5.0f
+							),
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(0, 0, 1920, 1080), 
+							glm::vec4(-1920, 0, 1920, 1080),
+							0.0f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(1920, 0, 1920, 1080), 
+							glm::vec4(0, 0, 1920, 1080),
+							0.0f,
+							glm::vec4(1.0f)
+							),
+							
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(0, 500, 1920, 1080), 
+							glm::vec4(-960, 100, 1920, 1080),
+							0.5f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(1920, 500, 1920, 1080), 
+							glm::vec4(960, 100, 1920, 1080),
+							0.5f,
+							glm::vec4(1.0f)
+							),
+
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(-960, 800, 1920, 1080), 
+							glm::vec4(0, 1000, 1920, 1080),
+							1.5f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/water.png"), 
+							glm::vec4(960, 800, 1920, 1080), 
+							glm::vec4(1920, 1000, 1920, 1080),
+							1.5f,
+							glm::vec4(1.0f)
+							),
+
+						SceneElem(
+							render.LoadTexture("textures/ui/pixel.png"), 
+							glm::vec4(0, 0, 1920, 1080), 
+							glm::vec4(0, 0, 1920, 1080),
+							-0.5f,
+							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
+							),
+						}, 
+					30000.0f)*/
+					
+					};
 	}
 };
 
@@ -351,11 +432,72 @@ public:
 	Victory() : Cutscene() {}
 	Victory(Render &render, Resource::Font* font) : Cutscene(font, render.LoadTexture("textures/ui/pixel.png"))
 	{
-		scenes = {
+		scenes = {Scene(
+						{
+						SceneElem(
+							render.LoadTexture("textures/cutscene/dodo.png"), 
+							glm::vec4(0, 0, 1920, 1080), 
+							glm::vec4(-1920, 0, 1920, 1080),
+							0.0f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/dodo.png"), 
+							glm::vec4(1920, 0, 1920, 1080), 
+							glm::vec4(0, 0, 1920, 1080),
+							0.0f,
+							glm::vec4(1.0f)
+							),
+							
+						SceneElem(
+							render.LoadTexture("textures/cutscene/dodo.png"), 
+							glm::vec4(0, 500, 1920, 1080), 
+							glm::vec4(-960, 100, 1920, 1080),
+							0.5f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/dodo.png"), 
+							glm::vec4(1920, 500, 1920, 1080), 
+							glm::vec4(960, 100, 1920, 1080),
+							0.5f,
+							glm::vec4(1.0f)
+							),
+
+						SceneElem(
+							render.LoadTexture("textures/cutscene/dodo.png"), 
+							glm::vec4(-960, 800, 1920, 1080), 
+							glm::vec4(0, 1000, 1920, 1080),
+							1.5f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/dodo.png"), 
+							glm::vec4(960, 800, 1920, 1080), 
+							glm::vec4(1920, 1000, 1920, 1080),
+							1.5f,
+							glm::vec4(1.0f)
+							),
+
+						SceneElem(
+							render.LoadTexture("textures/ui/pixel.png"), 
+							glm::vec4(0, 0, 1920, 1080), 
+							glm::vec4(0, 0, 1920, 1080),
+							-0.5f,
+							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
+							),
+						}, 
+					7500.0f),
 				Scene(
 						{
 						SceneElem(
-							{"You saved the dodo!", "This is very good", "we are saved now", "I cry with joy"}, 
+							{"Thanks For Playing!", "", "", "Credits:",
+							"Music        MakeFire Music",
+							"Sound        Paul James - Wafer Audio",
+							"Vocals       Paulina Ramirez -  Lady Yami #3939",
+							"Art           Thanos Gramosis",
+							"Code         Noam Zeise",
+							""}, 
 							glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
 							glm::vec4(10, 1000, 100, 100), 
 							glm::vec4(10, 0, 100, 100),
@@ -384,7 +526,7 @@ public:
 							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
 							),
 						}, 
-					20000.0f)};
+					16000.0f)};
 	}
 };
 

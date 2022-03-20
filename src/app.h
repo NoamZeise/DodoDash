@@ -69,6 +69,7 @@ private:
 	void loadMap();
 	void pauseToggled();
 	void Close();
+	void StopAudio();
 
 	glm::vec2 correctedPos(glm::vec2 pos);
 	glm::vec2 correctedMouse();
@@ -83,13 +84,23 @@ private:
 	std::thread submitDraw;
 	std::atomic<bool> finishedDrawSubmit;
 
+	std::thread toggleMusicThread;
+
 	float time = 0.0f;
 
 	camera::camera2D cam;
 
+	Resource::Texture bgBeachback;
 	Resource::Texture bgBeach;
-	Resource::Texture bgBeachFar;
-	Resource::Texture bgCloud;
+	Resource::Texture bgBeachRock;
+	Resource::Texture bgBeachFog;
+	Resource::Texture bgForest;
+	Resource::Texture bgForestFog;
+	Resource::Texture bgForestLeaves;
+	Resource::Texture bgMountainback;
+	Resource::Texture bgMountain;
+	Resource::Texture bgMountainRock;
+	Resource::Texture bgMountainFog;
 	std::vector<Background> backgrounds;
 	std::vector<glm::vec4> staticColliders;
 	std::vector<Poacher> poachers;

@@ -1,0 +1,1 @@
+windres resource.rc -o resource.o

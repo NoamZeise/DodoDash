@@ -36,7 +36,7 @@ public:
 				glm::vec4(
 				rect.x + (int)cameraRect.x,
 				rect.y + (int)cameraRect.y,
-				rect.z, rect.w), 0.0f, 5.0f);
+				rect.z, rect.w), 0.0f, 9.4f);
 		
 		if(gh::contains(mousePos, rect))
 			colliding = true;
@@ -45,7 +45,7 @@ public:
 	}
 	void Draw(Render &render)
 	{
-		render.DrawString(font, text, glm::vec2(rect.x + (int)camRect.x + textOffset.x, rect.y + (int)camRect.y + textOffset.y), fontSize, 0, glm::vec4(1.0f), 6.0f);
+		render.DrawString(font, text, glm::vec2(rect.x + (int)camRect.x + textOffset.x, rect.y + (int)camRect.y + textOffset.y), fontSize, 0, glm::vec4(1.0f), 9.5f);
 		if(colliding)
 			render.DrawQuad(buttonTex, modelMat, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
 		else

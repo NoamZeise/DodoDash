@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 #customize
-set(ProjectName "Dodo-Dash")
+set(ProjectName "The-Last-Dodo")
 
 #windows only
 set(Lib "D:/noam4/Libraries/VS/lib/x64/")
@@ -25,8 +25,8 @@ if (UNIX)
 
 elseif (MSVC)
     # https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170
-    set(CMAKE_CXX_FLAGS_DEBUG_INIT "/DDEBUG /MDd /Zi /Ob0 /Od /RTC1 /std:c++14")
-    set(CMAKE_CXX_FLAGS_RELEASE_INIT "/MD /Zi /O2 /Ob1 /DNDEBUG /std:c++14")
+    set(CMAKE_CXX_FLAGS_DEBUG_INIT "/DDEBUG /MTd /Zi /Ob0 /Od /RTC1 /std:c++14")
+    set(CMAKE_CXX_FLAGS_RELEASE_INIT "/MT /Zi /O2 /Ob1 /DNDEBUG /std:c++14")
 endif()
 
 #add executables

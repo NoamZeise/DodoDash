@@ -115,7 +115,7 @@ Animation currentAnimation;
 glm::vec2 position;
 glm::vec2 prevPos;
 glm::vec2 velocity;
-glm::vec4 hitBoxOffset = glm::vec4(80, 100, 160, 175);
+glm::vec4 hitBoxOffset = glm::vec4(100, 110, 120, 160);
 glm::vec4 hitRect;
 float xAcceleration = 0.0025f;
 float yAcceleration = 0.0f;
@@ -130,10 +130,10 @@ float gravity = 0.008f;
 float yMax = 1.2f;
 float yMaximumFall = 1.0f;
 float jumpAccel = -0.01f;
-float jumpMax = -1.0f;
+float jumpMax = -1.15f;
 
-float jumpTimer = 150.0f;
-float jumpDelay = 150.0f;
+float jumpTimer = 170.0f;
+float jumpDelay = 170.0f;
 
 float boostTimer = 0.0f;
 float boostDelay = 400.0f;
@@ -166,7 +166,7 @@ bool unpressedJump = false;
 bool isFloating = false;
 bool isBoosting = false;
 
-float changeAmount = 0.25f;
+float changeAmount = 0.2f;
 
 bool layingEgg = false;
 bool EggDone = false;

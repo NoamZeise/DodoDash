@@ -22,20 +22,21 @@ class Background
 {
 public:
 	Background() {}
-	Background(Resource::Texture bg, float height, float speed, float depth, glm::vec4 mapRect)
+	Background(Resource::Texture bg, float height, float speed, float moveSpeed, float depth, glm::vec4 mapRect)
 	{
 		this->tex = bg;
 		this->height = height;
 		this->speed = speed;
+		this->moveSpeed = moveSpeed;
 		this->depth = depth;
 		this->mapRect = mapRect;
 	}
 
 	void Update(Timer &timer, glm::vec4 camRect)
 	{
-		//currentMove += timer.FrameElapsed() * speed;
-		//if(currentMove > tex.dim.x)
-		//	currentMove = 0.0f;
+		currentMove += timer.FrameElapsed() * moveSpeed;
+		if(currentMove > tex.dim.x)
+			currentMove = 0.0f;
 		texOffset = glmhelper::calcTexOffset(tex.dim, glm::vec4(mapRect.x + currentMove, mapRect.y, mapRect.z, tex.dim.y));
 		mat = glmhelper::calcMatFromRect(glm::vec4((int)camRect.x * speed, (int)camRect.y + height, mapRect.z, tex.dim.y), 0.0f, depth);
 	}
@@ -51,6 +52,7 @@ private:
 	float height;
 	float speed;
 	float depth;
+	float moveSpeed;
 	float currentMove = 0.0f;
 
 	glm::vec4 mapRect;

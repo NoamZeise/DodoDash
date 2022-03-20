@@ -2,11 +2,11 @@
 
 Bullet::Bullet(Render &render, float scale)
 {
-	animations.shootRight = Animation(render.LoadTexture("textures/enemy/bullet.png"), 50.0f, 200, true);
-	animations.shootLeft = Animation(render.LoadTexture("textures/enemy/bullet.png"), 50.0f, 200, false);
-	drawRect = glm::vec4(0, 0, 200, 100);
+	animations.shootRight = Animation(render.LoadTexture("textures/enemy/bullet.png"), 50.0f, 162, true);
+	animations.shootLeft = Animation(render.LoadTexture("textures/enemy/bullet.png"), 50.0f, 162, false);
+	drawRect = glm::vec4(0, 0, 162, 38);
 	drawRect *= scale;
-	hitBoxOffset = glm::vec4(20, 20, 160, 160);
+	hitBoxOffset = glm::vec4(20, 10, 120, 20);
 	hitBoxOffset *= scale;
 }
 

@@ -3,13 +3,13 @@
 ## Team
 
 
-Lady Yami  -> Vocals
+MakeFire Music -> Music
 
-Mick Cooke -> Music
+Paul James - Wafer Audio -> Sound Effects
 
-Paul Wafer -> Sound Effects
+Paulina Ramirez -  Lady Yami #3939 -> Vocals
 
-Yery       -> Art
+Thanos Gramosis       -> Art
 
 Me         -> Programming
 

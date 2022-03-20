@@ -59,7 +59,7 @@ class MapGoal: public MapObj
 public:
 	MapGoal() : MapObj() {}
 	MapGoal(Render &render)
-		: MapObj(Animation(render.LoadTexture("textures/onMap/goal.png"), 100.0f, 200, false))
+		: MapObj(Animation(render.LoadTexture("textures/onMap/goal.png"), 100.0f, 264, false))
 	{
 		
 	}
@@ -70,7 +70,7 @@ class Fruit: public MapObj
 public:
 	Fruit() : MapObj() {}
 	Fruit(Render &render)
-		: MapObj(Animation(render.LoadTexture("textures/onMap/fruit.png"), 100.0f, 100, false))
+		: MapObj(Animation(render.LoadTexture("textures/onMap/fruit.png"), 190.0f, 130, false))
 	{
 		
 	}

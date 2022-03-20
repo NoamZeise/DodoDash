@@ -255,6 +255,10 @@ Map::Map(std::string filename)
 					texts.back().colour.b =  std::stoi(colour.substr(5, 2), nullptr, 16);
 					texts.back().colour.a =  colour.size() > 7 ? std::stoi(colour.substr(7, 2), nullptr, 16) : 255;
 				}
+				else
+				{
+					texts.back().colour = Colour(0, 0, 0, 255);
+				}
 				fillObj = &texts.back().obj;
 			}
 			else

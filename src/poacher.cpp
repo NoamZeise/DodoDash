@@ -6,19 +6,13 @@ Poacher::Poacher(Render &render, float scale, glm::vec4 position)
 	bullet = Bullet(render, 0.25f);
 
 	animations.shootRight = Animation(render.LoadTexture("textures/enemy/poacherShoot.png"), 80.0f, 320, true);
-	animations.dieRight = Animation(render.LoadTexture("textures/enemy/poacherDie.png"), 80.0f, 200, true);
+	animations.dieRight = Animation(render.LoadTexture("textures/enemy/poacherDie.png"), 80.0f, 320, true);
 	animations.shootLeft = Animation(render.LoadTexture("textures/enemy/poacherShoot.png"), 80.0f, 320, false);
-	animations.dieLeft = Animation(render.LoadTexture("textures/enemy/poacherDie.png"), 80.0f, 200, false);
+	animations.dieLeft = Animation(render.LoadTexture("textures/enemy/poacherDie.png"), 80.0f, 320, false);
 
 	currentAnimation = animations.shootLeft;
 
 	drawRect = position * scale;
-	hitBox = position;
-	hitBox.x += 50;
-	hitBox.y += 60;
-	hitBox.z = 100;
-	hitBox.w = 140;
-	hitBox *= scale;
 	modelMat = glmhelper::calcMatFromRect(drawRect, 0.0f, 1.0f);
 }
 
@@ -26,10 +20,10 @@ void Poacher::setPoacher(glm::vec4 position)
 {
 	drawRect = position * scale;
 	hitBox = position;
-	hitBox.x += 40;
-	hitBox.y += 130;
-	hitBox.z = 125;
-	hitBox.w = 100;
+	hitBox.x += hitboxOffset.x;
+	hitBox.y += hitboxOffset.y;
+	hitBox.z = hitboxOffset.z;
+	hitBox.w = hitboxOffset.w;
 	hitBox *= scale;
 	modelMat = glmhelper::calcMatFromRect(drawRect, 0.0f, 1.0f);
 }
@@ -65,7 +59,7 @@ void Poacher::Update(Timer &timer, glm::vec4 cameraRect, glm::vec2 playerPos, st
 				}
 			}
 			shootTimer += timer.FrameElapsed();
-			currentFrame = currentAnimation.PingPongOnce(timer);
+			currentFrame = currentAnimation.PlayOnce(timer);
 
 			if(currentAnimation.getIndex() == 3)
 			{

@@ -17,10 +17,10 @@ void Crab::setCrab(glm::vec4 track)
 	this->track = track * scale;
 	drawRect = glm::vec4(this->track.x, this->track.y, this->track.w, this->track.w);
 	hitBox = drawRect;
-	hitBox.x += 30;
-	hitBox.y += 10;
-	hitBox.z = this->track.w - 60;
-	hitBox.w = this->track.w;
+	hitBox.x += 135;
+	hitBox.y += 200;
+	hitBox.z = this->track.w - 270;
+	hitBox.w = this->track.w - 200;
 	hitBox *= scale;
 }
 

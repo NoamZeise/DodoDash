@@ -49,7 +49,7 @@ public:
 
 		selected = selected < 0 ? max : selected > max ? 0 : selected;
 
-		modelMat = glmhelper::calcMatFromRect(glm::vec4(position.x + (int)cameraRect.x, (position.y + seperation * selected) + (int)cameraRect.y, 50, 50), 0.0f, 5.0f);
+		modelMat = glmhelper::calcMatFromRect(glm::vec4(position.x + (int)cameraRect.x, (position.y + seperation * selected) + (int)cameraRect.y, 50, 50), 0.0f, 9.0f);
 
 		for(auto& btn: buttons)
 			btn.Update(cameraRect, mousePos);
@@ -100,7 +100,7 @@ public:
 	{
 		fadeTimer += timer.FrameElapsed();
 		fadeRatio = (fadeTimer < fadeDelay ? fadeTimer/fadeDelay : 1.0f);
-		bgMat = glmhelper::calcMatFromRect(glm::vec4((int)cameraRect.x, (int)cameraRect.y, settings::TARGET_WIDTH, settings::TARGET_HEIGHT), 0.0f, 3.0f);
+		bgMat = glmhelper::calcMatFromRect(glm::vec4((int)cameraRect.x, (int)cameraRect.y, settings::TARGET_WIDTH, settings::TARGET_HEIGHT), 0.0f, 9.0f);
 		Menu::Update(cameraRect, mousePos, input, prevInput);
 		if(input.Keys[GLFW_KEY_Z] && !prevInput.Keys[GLFW_KEY_Z])
 		{

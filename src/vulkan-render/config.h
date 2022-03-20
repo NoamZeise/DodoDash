@@ -2,7 +2,7 @@
 #define VULKAN_RENDERER_CONFIG_H
 
 
-//#define NDEBUG
+#define NDEBUG
 #define NO_ASSIMP 
 
 namespace settings

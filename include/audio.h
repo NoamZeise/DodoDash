@@ -190,10 +190,24 @@ public:
 				activeAudio[i]->Play();
 	}
 
+	void ResumeAll()
+	{
+		for (size_t i = 0; i < activeAudio.size(); i++)
+			if(activeAudio[i]->paused)
+				activeAudio[i]->Play();
+	}
+
 	void Pause(std::string filename)
 	{
 		for (size_t i = 0; i < activeAudio.size(); i++)
 			if(activeAudio[i]->audio->filename == filename && !activeAudio[i]->paused)
+					activeAudio[i]->Pause();
+	}
+
+	void PauseAll()
+	{
+		for (size_t i = 0; i < activeAudio.size(); i++)
+			if(!activeAudio[i]->paused)
 					activeAudio[i]->Pause();
 	}
 

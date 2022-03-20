@@ -10,12 +10,15 @@ App::App()
 	if (!glfwInit())
 			throw std::runtime_error("failed to initialise glfw!");
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); //using vulkan not openGL
-	mWindow = glfwCreateWindow(mWindowWidth, mWindowHeight, "Dodo Dash", nullptr, nullptr);
+	mWindow = glfwCreateWindow(mWindowWidth, mWindowHeight, "The Last Dodo", nullptr, nullptr);
 	if(!mWindow)
 	{
 		glfwTerminate();
 		throw std::runtime_error("failed to create glfw window!");
 	}
+	GLFWimage winIcon[1];
+	winIcon[0].pixels = stbi_load("textures/icon.png", &winIcon[0].width, &winIcon[0].height, 0, 4); //rgba channels 
+	glfwSetWindowIcon(mWindow, 1, winIcon);
 	glfwSetWindowUserPointer(mWindow, this);
 	glfwSetFramebufferSizeCallback(mWindow, framebuffer_size_callback);
 	glfwSetCursorPosCallback(mWindow, mouse_callback);
@@ -37,6 +40,9 @@ App::App()
 	mRender = new Render(mWindow, glm::vec2(width, height));
 
 	loadAssets();
+	audioManager.Play("audio/cutsceneVO/Intro.ogg", false, 1.0f);
+	activeCutsene = openingCutscene;
+	inCutscene = true;
 	lifeTexTransform.resize(player.getHpMax());
 	pauseMenu = PauseMenu(colourPixel, buttonTexture, font);
 	finishedDrawSubmit = true;
@@ -44,6 +50,7 @@ App::App()
 
 App::~App()
 {
+	StopAudio();
 	if(submitDraw.joinable())
 		submitDraw.join();
 	delete mRender;
@@ -60,9 +67,6 @@ void App::loadAssets()
 	openingCutscene = Opening(*mRender, font);
 	victoryCutscene = Victory(*mRender, font);
 	extinctCutscene = Extinct(*mRender, font);
-	audioManager.Play("audio/Extinction Demo V3.wav", false, 1.0f);
-	activeCutsene = openingCutscene;
-	inCutscene = true;
 
 	currentMapIndex = 0;
 
@@ -82,46 +86,70 @@ void App::loadAssets()
 
 	maps.push_back(Map("maps/level1.tmx", mRender, mapScale, font, 0.03f));
 	maps.push_back(Map("maps/level2.tmx", mRender, mapScale, font, 0.04f));
-	maps.push_back(Map("maps/level3.tmx", mRender, mapScale, font, 0.08f));
+	maps.push_back(Map("maps/level3.tmx", mRender, mapScale, font, 0.07f));
 	currentMap = maps[currentMapIndex];
 	player = Player(*mRender, 0.6f);
 	poacher = Poacher(*mRender, mapScale, glm::vec4(0, 0, 0, 0));
 	fruit = Fruit(*mRender);
 	crab = Crab(*mRender, mapScale, glm::vec4(0.0f));
 	mapGoal = MapGoal(*mRender);
-	lifeTex = mRender->LoadTexture("textures/ui/gameplay/feather.png");
-	noLifeTex = mRender->LoadTexture("textures/ui/gameplay/darkfeather.png");
+	lifeTex = mRender->LoadTexture("textures/ui/gameplay/live.png");
+	noLifeTex = mRender->LoadTexture("textures/ui/gameplay/livelost.png");
 	buttonTexture = mRender->LoadTexture("textures/ui/menu/button.png");
 	colourPixel = mRender->LoadTexture("textures/ui/pixel.png");
-	bgBeach = mRender->LoadTexture("textures/bg/beach.png");
-	bgBeachFar = mRender->LoadTexture("textures/bg/beachFar.png");
-	bgCloud = mRender->LoadTexture("textures/bg/clouds.png");
+	bgBeachback = mRender->LoadTexture("textures/bg/beach/BG.png");
+	bgBeach = mRender->LoadTexture("textures/bg/beach/Beach.png");
+	bgBeachRock = mRender->LoadTexture("textures/bg/beach/Rock.png");
+	bgBeachFog = mRender->LoadTexture("textures/bg/beach/Fog.png");
+	bgForest = mRender->LoadTexture("textures/bg/jungle/Jungle.png");
+	bgForestFog = mRender->LoadTexture("textures/bg/jungle/Fog.png");
+	bgForestLeaves = mRender->LoadTexture("textures/bg/jungle/Leaves.png");
+	bgMountainback = mRender->LoadTexture("textures/bg/mountain/BG.png");
+	bgMountain = mRender->LoadTexture("textures/bg/mountain/Mountain.png");
+	bgMountainRock = mRender->LoadTexture("textures/bg/mountain/Rock.png");
+	bgMountainFog = mRender->LoadTexture("textures/bg/mountain/Fog.png");
 	mRender->endResourceLoad();
+}
+
+void App::StopAudio()
+{
+	if(toggleMusicThread.joinable())
+		toggleMusicThread.join();
+	audioManager.StopAll();
 }
 
 void App::loadMap()
 {
+	backgrounds.clear();
 	switch(currentMapIndex)
 	{
 		case 0:
-			backgrounds.push_back(Background(bgBeachFar, 400, 0.9, -6.0f, currentMap.getMapRect()));
-			backgrounds.push_back(Background(bgBeach, 600, 0.7, -5.0f, currentMap.getMapRect()));
-			backgrounds.push_back(Background(bgCloud, 100, 0.5, -4.0f, currentMap.getMapRect()));
-			audioManager.StopAll();
-			audioManager.Play("audio/Dodo Hornpipe 1st Level Demo V2.wav", true, 0.5f);
+			backgrounds.push_back(Background(bgBeachback, 0, 0.7, 0.0f,-9.0f, currentMap.getMapRect()));
+			backgrounds.push_back(Background(bgBeach, 0, 1.0, 0.0f, -8.9f, currentMap.getMapRect()));
+			backgrounds.push_back(Background(bgBeachFog, 0, 0.8, -0.05f, -8.8f, currentMap.getMapRect()));
+			backgrounds.push_back(Background(bgBeachRock, 0, 0.5, 0.0f,-8.7f, currentMap.getMapRect()));
+			StopAudio();
+			audioManager.Play("audio/music/lvl1.ogg", false, 0.5f);
 			break;
 		case 1:
-			audioManager.StopAll();
-			audioManager.Play("audio/Dodo Hornpipe 2nd Level Demo.wav", true, 0.5f);
+			backgrounds.push_back(Background(bgForest, 0, 0.9, 0.0f,-9.0f, currentMap.getMapRect()));
+			backgrounds.push_back(Background(bgForestLeaves, 0, 0.7, 0.0f,-8.7f, currentMap.getMapRect()));
+			backgrounds.push_back(Background(bgForestFog, 0, 0.75, -0.05f, -8.6f, currentMap.getMapRect()));
+			StopAudio();
+			audioManager.Play("audio/music/lvl2.ogg", false, 0.5f);
 			break;
 		case 2:
-			audioManager.StopAll();
-			audioManager.Play("audio/Dodo Hornpipe 3nd Level Demo.wav", true, 0.5f);
+			backgrounds.push_back(Background(bgMountainback, 0, 0.9, 0.0f,-9.0f, currentMap.getMapRect()));
+			backgrounds.push_back(Background(bgMountain, 0, 0.8, 0.0f, -8.9f, currentMap.getMapRect()));
+			backgrounds.push_back(Background(bgMountainFog, 0, 0.7, -0.05f, -8.8f, currentMap.getMapRect()));
+			backgrounds.push_back(Background(bgMountainRock, 100, 0.5, 0.0f,-8.7f, currentMap.getMapRect()));
+			StopAudio();
+			audioManager.Play("audio/music/lvl3.ogg", false, 0.5f);
 			break;
-		case 3:
-			audioManager.StopAll();
+		/*case 3:
+			StopAudio();
 			audioManager.Play("audio/Dodo Hornpipe 4th Level Demo.wav", true, 0.5f);
-			break;
+			break;*/
 
 	}
 	currentMap.Reset();
@@ -129,6 +157,7 @@ void App::loadMap()
 	bullets.clear();
 	poachers.clear();
 	fruits.clear();
+	crabs.clear();
 	cam.setCameraMapRect(currentMap.getMapRect());
 	cam.SetCameraOffset(player.getMidPoint());
 	mapGoal.setDrawRect(currentMap.getGoal(), mapScale);
@@ -204,14 +233,16 @@ void App::update()
 	auto start = std::chrono::high_resolution_clock::now();
 #endif
 
-	transitionTimer += timer.FrameElapsed();
+	if(!isPaused)
+		transitionTimer += timer.FrameElapsed();
 
 	if(finishedAllMaps && !inCutscene && !playedVictory)
 	{
 		playedVictory = true;
 		inCutscene = true;
-		audioManager.StopAll();
-		//audioManager.Play();
+		StopAudio();
+		audioManager.Play("audio/cutsceneVO/Ending.ogg", false, 1.0f);
+		audioManager.Play("audio/The Last Dodo Good Ending.ogg", false, 0.6f);
 		activeCutsene = victoryCutscene;
 		activeCutsene.Reset();
 	}
@@ -235,7 +266,7 @@ void App::update()
 			else
 			{
 			didTransition = false;
-			audioManager.StopAll();
+			StopAudio();
 			inCutscene = false;
 			activeCutsene = Cutscene();
 			loadMap();
@@ -307,8 +338,9 @@ void App::gameUpdate()
 			
 			didTransition = true;
 			transitionTimer = 0.0f;
-			audioManager.StopAll();
-			audioManager.Play("audio/Dodo You Died V2.wav", false, 0.7f);
+			StopAudio();
+			audioManager.Play("audio/death.ogg", false, 0.7f);
+			//audioManager.Play("audio/cutsceneVO/Death.ogg", false, 1.0f);
 		}
 		else
 		{
@@ -338,8 +370,8 @@ void App::gameUpdate()
 			{
 				didTransition = true;
 				transitionTimer = 0.0f;
-				audioManager.StopAll();
-				audioManager.Play("audio/Dodo You Lived V2.wav", false, 0.7f);
+				StopAudio();
+				audioManager.Play("audio/complete.ogg", false, 0.7f);
 			}
 			else
 			{
@@ -430,10 +462,10 @@ void App::postUpdate()
 	{
 		lifeTexTransform[i] = glmhelper::calcMatFromRect(
 			glm::vec4(
-				(10 + i * lifeTex.dim.x) + (int)cam.getCameraOffset().x,
-				(10) + (int)cam.getCameraOffset().y,
-				lifeTex.dim.x,
-				 lifeTex.dim.y), 0.0f, 2.0f);
+				(40 + i * (lifeTex.dim.x/3 + 20)) + (int)cam.getCameraOffset().x,
+				(20) + (int)cam.getCameraOffset().y,
+				lifeTex.dim.x / 3,
+				 lifeTex.dim.y / 3), 0.0f, 2.0f);
 	}
 	}
 
@@ -452,7 +484,7 @@ void App::postUpdate()
 
 	if(transitionTimer < transitionDelay)
 		fadeMat = glmhelper::calcMatFromRect(glm::vec4((int)cam.getCameraArea().x, (int)cam.getCameraArea().y, 
-				settings::TARGET_WIDTH, settings::TARGET_HEIGHT), 0.0f, 10.0f);
+				settings::TARGET_WIDTH, settings::TARGET_HEIGHT), 0.0f, 6.0f);
 
 	mRender->set2DViewMatrix(cam.getViewMat());
 	time += timer.FrameElapsed();
@@ -476,11 +508,19 @@ void App::Close()
 
 void App::pauseToggled()
 {
+	if(toggleMusicThread.joinable())
+		toggleMusicThread.join();
 	pauseMenu.Reset();
 	if(isPaused)
+	{
+		toggleMusicThread = std::thread(&Audio::Manager::PauseAll, &audioManager);
 		glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
 	else
+	{
+		audioManager.ResumeAll();
 		glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	}
 }
 
 
@@ -509,6 +549,7 @@ void App::draw()
 		gameDraw();
 	}
 
+	if(!isPaused)
 	if(transitionTimer < transitionDelay)
 	{
 		if(transitionTimer < transitionDelay/2)

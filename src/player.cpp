@@ -8,8 +8,8 @@ Player::Player(Render &render, float scale)
 	animations.RunRight = Animation(run, 100.0f, 320, false);
 	animations.RunLeft = Animation(run, 100.0f, 320, true);
 	Resource::Texture jump = render.LoadTexture("textures/dodo/jump.png");
-	animations.JumpRight = Animation(jump, 90.0f, 320, false);
-	animations.JumpLeft = Animation(jump, 90.0f, 320, true);
+	animations.JumpRight = Animation(jump, 120.0f, 320, false);
+	animations.JumpLeft = Animation(jump, 120.0f, 320, true);
 	Resource::Texture flutterTex = render.LoadTexture("textures/dodo/flutter.png");
 	animations.FlutterRight = Animation(flutterTex, 100.0f, 320, false);
 	animations.FlutterLeft = Animation(flutterTex, 100.0f, 320, true);
@@ -329,7 +329,7 @@ void Player::animate(Timer &timer)
 void Player::Draw(Render &render)
 { 
 	if(invincibilityTimer < invincibilityDelay && invFlash)
-		render.DrawQuad(currentFrame.tex, modelMat, glm::vec4(5.0f, 1.0f, 1.0f, 1.0f), currentFrame.textureOffset);
+		render.DrawQuad(currentFrame.tex, modelMat, glm::vec4(1.0f, 1.0f, 1.0f, 0.2f), currentFrame.textureOffset);
 	else
 		render.DrawQuad(currentFrame.tex, modelMat, glm::vec4(1.0f), currentFrame.textureOffset);
 	//render.DrawQuad(Resource::Texture(), glmhelper::calcMatFromRect(hitRect, 0, 5.0f), glm::vec4(1.0f));
