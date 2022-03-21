@@ -1,8 +1,9 @@
 #include "player.h"
 
-Player::Player(Render &render, float scale)
+Player::Player(Render &render, float scale, ParticleManager* particleManager)
 {
 	this->scale = scale;
+	this->particleManager = particleManager;
 	hitBoxOffset *= scale;
 	Resource::Texture run = render.LoadTexture("textures/dodo/run.png");
 	animations.RunRight = Animation(run, 100.0f, 320, false);
@@ -60,6 +61,7 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 				{
 					velocity.y = velocity.y < 0 ? 0: velocity.y;
 					isBoosting = true;
+					//particleManager->EmitFeather(getMidPoint(), velocity, 1000.0f);
 				}
 				boostTimer += timer.FrameElapsed();
 				if(velocity.y > 0)
@@ -69,6 +71,13 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 			}
 			else
 			{
+				glideFeatherTimer += timer.FrameElapsed();
+				if(glideFeatherTimer > glideFeatherDelay)
+				{
+					glideFeatherTimer = 0.0f;
+					particleManager->EmitFeather(getMidPoint(), velocity * 0.6f, 300.0f);
+				}
+				//particleManager->EmitRain(getMidPoint(), velocity, 1000.0f);//EmitFeather(getMidPoint(), velocity, 1000.0f);
 				isFloating = true;
 				auto sinceP = sinceJumpPressed - boostDelay;
 				float floatPercent = sinceP < 1000.0f + boostDelay ? sinceP/1000.0f : 1.0f;
@@ -130,6 +139,15 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 	movement(timer, colliders);
 	
 	animate(timer);
+
+	if(justDamaged || justBooseted)
+	{
+		justDamaged = false;
+		justBooseted = false;
+		for(int i = 0; i < 10; i++)
+			particleManager->EmitFeather(getMidPoint(), velocity, 800.0f);
+	}
+
 	
 	drawRect.x = position.x;
 	drawRect.y = position.y;

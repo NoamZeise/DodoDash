@@ -16,19 +16,22 @@
 #include <glmhelper.h>
 #include "gamehelper.h"
 
+#include "particle.h"
+
 #include <iostream>
 
 class Player
 {
 public:
 	Player() {}
-	Player(Render &render, float scale);
+	Player(Render &render, float scale, ParticleManager* particleManager);
 	void Update(Timer &timer, Input &input, std::vector<glm::vec4> &colliders);
 	void Draw(Render &render);
 	glm::vec2 getMidPoint() { return glm::vec2(position.x + drawRect.z/2, position.y + drawRect.w/2); }
 	glm::vec4 getHitBox() { return hitRect; }
 	void bounce()
 	{ 
+		justBooseted = true;
 		velocity.y = jumpMax;
 		//yAcceleration = jumpAccel;		
 		sinceJumpPressed = 0.0f;
@@ -53,6 +56,7 @@ public:
 	{ 
 		if(invincibilityTimer > invincibilityDelay)
 		{
+			justDamaged = true;
 			invincibilityTimer = 0;
 			hp--;
 		}
@@ -91,6 +95,7 @@ public:
 	}
 	int getHp() { return hp; }
 	int getHpMax() { return maxHp; }
+	glm::vec2 getVelocity() { return this->velocity; }
 
 private:
 void movement(Timer &timer, std::vector<glm::vec4> &colliders);
@@ -145,6 +150,8 @@ float sinceGroundedDelay = 70.0f;
 float sinceJumpPressed = 0.0f;
 
 bool invFlash = false;
+bool justDamaged = false;
+bool justBooseted = false;
 
 float invincibilityDelay = 1500.0f;
 float invincibilityTimer = invincibilityDelay;
@@ -173,6 +180,11 @@ bool EggDone = false;
 
 glm::vec4 drawRect;
 glm::mat4 modelMat;
+
+ParticleManager* particleManager;
+
+float glideFeatherTimer = 0.0f;
+float glideFeatherDelay = 100.0f;
 
 };
 

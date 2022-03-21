@@ -88,7 +88,8 @@ void App::loadAssets()
 	maps.push_back(Map("maps/level2.tmx", mRender, mapScale, font, 0.04f));
 	maps.push_back(Map("maps/level3.tmx", mRender, mapScale, font, 0.07f));
 	currentMap = maps[currentMapIndex];
-	player = Player(*mRender, 0.6f);
+	particleManager = ParticleManager(*mRender);
+	player = Player(*mRender, 0.6f, &particleManager);
 	poacher = Poacher(*mRender, mapScale, glm::vec4(0, 0, 0, 0));
 	fruit = Fruit(*mRender);
 	crab = Crab(*mRender, mapScale, glm::vec4(0.0f));
@@ -108,6 +109,7 @@ void App::loadAssets()
 	bgMountain = mRender->LoadTexture("textures/bg/mountain/Mountain.png");
 	bgMountainRock = mRender->LoadTexture("textures/bg/mountain/Rock.png");
 	bgMountainFog = mRender->LoadTexture("textures/bg/mountain/Fog.png");
+
 	mRender->endResourceLoad();
 }
 
@@ -360,6 +362,7 @@ void App::gameUpdate()
 	auto playerMid = player.getMidPoint();
 	auto playerHitBox = player.getHitBox();
 	auto camArea = cam.getCameraArea();
+
 	mapGoal.Update(timer, camArea);
 	if(gh::colliding(mapGoal.getHitBox(), playerHitBox))
 	{
@@ -447,6 +450,7 @@ void App::gameUpdate()
 	}
 
 	cam.Target(player.getMidPoint(), timer);
+	particleManager.Update(timer, cam.getCameraArea());
 	for(auto&& bg: backgrounds)
 		bg.Update(timer, cam.getCameraArea());
 	currentMap.Update(cam.getCameraArea(), timer);
@@ -588,6 +592,8 @@ void App::gameDraw()
 
 
 	player.Draw(*mRender);
+
+	particleManager.Draw(*mRender);
 
 	for(unsigned int i = 0; i < bullets.size(); i++)
 	{

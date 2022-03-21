@@ -34,6 +34,7 @@
 #include "mapobj.h"
 #include "menu.h"
 #include "background.h"
+#include "particle.h"
 
 #include "cutscene.h"
 
@@ -111,6 +112,8 @@ private:
 	Fruit fruit;
 	Crab crab;
 	MapGoal mapGoal;
+
+	ParticleManager particleManager;
 
 	Resource::Texture lifeTex;
 	Resource::Texture noLifeTex;
