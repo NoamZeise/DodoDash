@@ -25,8 +25,8 @@ if (UNIX)
 
 elseif (MSVC)
     # https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170
-    set(CMAKE_CXX_FLAGS_DEBUG_INIT "/DDEBUG /MTd /Zi /Ob0 /Od /RTC1 /std:c++14")
-    set(CMAKE_CXX_FLAGS_RELEASE_INIT "/MT /Zi /O2 /Ob1 /DNDEBUG /std:c++14")
+    set(CMAKE_CXX_FLAGS_DEBUG_INIT "/DDEBUG /MDd /Zi /Ob0 /Od /RTC1")
+    set(CMAKE_CXX_FLAGS_RELEASE_INIT "/MD /Zi /O2 /Ob1 /DNDEBUG")
 endif()
 
 #add executables
@@ -34,7 +34,8 @@ file(GLOB SOURCES src/*)
 file(GLOB VULKAN-RENDER src/vulkan-render/*)
 add_executable(${ProjectName} ${SOURCES}
                               ${VULKAN-RENDER}
-                              ${PROJ_INCLUDE})
+                              ${PROJ_INCLUDE}
+                            "resources/resource/resource.o")
 
 #link
 target_include_directories(${ProjectName} PUBLIC include/)
@@ -55,7 +56,6 @@ elseif(MSVC)
     target_link_libraries(${ProjectName} ${Lib}glfw3.lib
                                          ${Lib}freetyped.lib
                                          ${Lib}vulkan-1.lib
-                                         ${Lib}assimp-vc140-mt.lib
                                          ${Lib}portaudio_x64.lib
                                          ${Lib}sndfile.lib)
 endif()
