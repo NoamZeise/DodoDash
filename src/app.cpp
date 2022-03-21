@@ -17,7 +17,7 @@ App::App()
 		throw std::runtime_error("failed to create glfw window!");
 	}
 	GLFWimage winIcon[1];
-	winIcon[0].pixels = stbi_load("textures/icon.png", &winIcon[0].width, &winIcon[0].height, 0, 4); //rgba channels 
+	winIcon[0].pixels = stbi_load("textures/icon.png", &winIcon[0].width, &winIcon[0].height, 0, 4); //rgba channels
 	glfwSetWindowIcon(mWindow, 1, winIcon);
 	glfwSetWindowUserPointer(mWindow, this);
 	glfwSetFramebufferSizeCallback(mWindow, framebuffer_size_callback);
@@ -250,7 +250,7 @@ void App::update()
 	{
 		Close();
 	}
-	
+
 	if(transitionTimer >= transitionDelay / 2)
 	{
 
@@ -318,7 +318,7 @@ void App::update()
 	}//transition
 
 	postUpdate();
-	
+
 #ifdef TIME_APP_DRAW_UPDATE
 	auto stop = std::chrono::high_resolution_clock::now();
 	std::cout
@@ -335,7 +335,7 @@ void App::gameUpdate()
 	{
 		if(!didTransition)
 		{
-			
+
 			didTransition = true;
 			transitionTimer = 0.0f;
 			StopAudio();
@@ -483,7 +483,7 @@ void App::postUpdate()
 	}
 
 	if(transitionTimer < transitionDelay)
-		fadeMat = glmhelper::calcMatFromRect(glm::vec4((int)cam.getCameraArea().x, (int)cam.getCameraArea().y, 
+		fadeMat = glmhelper::calcMatFromRect(glm::vec4((int)cam.getCameraArea().x, (int)cam.getCameraArea().y,
 				settings::TARGET_WIDTH, settings::TARGET_HEIGHT), 0.0f, 6.0f);
 
 	mRender->set2DViewMatrix(cam.getViewMat());
@@ -502,7 +502,7 @@ void App::Close()
 		savefile << currentMapIndex;
 		savefile.close();
 	}
-	
+
 	glfwSetWindowShouldClose(mWindow, GLFW_TRUE);
 }
 
