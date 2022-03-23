@@ -1,6 +1,7 @@
 #include "app.h"
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 
 
 int main()
@@ -15,9 +16,13 @@ int main()
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << e.what() << std::endl;
-		int wait;
-		std::cin >> wait;
+		std::ofstream crashFile("CrashInfo.txt");
+		if (crashFile.is_open())
+		{
+			crashFile.seekp(0);
+			crashFile << e.what();
+			crashFile.close();
+		}
 		return EXIT_FAILURE;
 	}
 

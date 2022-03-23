@@ -12,4 +12,7 @@ layout (location = 0) out vec4 outFragColor;
 void main() 
 {
   outFragColor = texture(sampler2D(offscreenTex, offscreenSampler), inUV);
+  
+  outFragColor.rgb *= mix(1.0f, 0.5f, inUV.y);
+  outFragColor.rgb *= 1.4f;
 }

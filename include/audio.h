@@ -8,10 +8,9 @@
 #include <map>
 #include <cstring>
 
+#include <stdexcept>
 #ifdef AUDIO_NO_EXCEPT
 #include <iostream>
-#else
-#include <stdexcept>
 #endif
 
 namespace Audio
@@ -38,11 +37,7 @@ struct AudioData
 	{
 		SNDFILE* file = sf_open(filename.c_str(), SFM_READ, &this->info);
     	if (sf_error(file) != SF_ERR_NO_ERROR)
-#ifndef AUDIO_NO_EXCEPT
 			throw std::runtime_error("failed to load audio data at " + filename);
-#else
-			std::cout << "failed to load audio data at " + filename << std::endl;
-#endif
 		this->sampleCount = info.frames * info.channels;
 		this->data = new float[sampleCount];
 		if(sf_readf_float(file, this->data, info.frames) != info.frames)
