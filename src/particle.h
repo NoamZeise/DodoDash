@@ -59,12 +59,18 @@ public:
 	void Draw(Render &render);
 	void EmitFeather(glm::vec2 pos, glm::vec2 playerVelocity, float lifetime);
 	void EmitRain(glm::vec2 pos);
+	void SetRainParams(float delay, int count)
+	{
+		rainDelay = delay;
+		rainCount = count;
+	}
 private:
 	std::vector<Particle> particles;
 	Resource::Texture featherTex;
 	Resource::Texture rainTex;
 	GameRandom rand;
 
+	int rainCount = 15;
 	float rainTimer = 0.0f;
 	float rainDelay = 20.0f;
 

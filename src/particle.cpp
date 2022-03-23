@@ -54,8 +54,7 @@ void ParticleManager::Update(Timer &timer, glm::vec4 camRect)
 	if(rainTimer > rainDelay)
 	{
 		rainTimer = 0.0f;
-		int num = 15;
-		for(int i = 0; i < num; i++)
+		for(int i = 0; i < rainCount; i++)
 		{
 			float rainMod = rand.PositiveReal();
 			EmitRain(glm::vec2(camRect.x + ((settings::TARGET_WIDTH + 300)*rand.PositiveReal()), camRect.y - 10));

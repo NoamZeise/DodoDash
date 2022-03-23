@@ -3,12 +3,16 @@
 
 #include <sndfile.h>
 #include <portaudio.h>
-
-#include <stdexcept>
 #include <string>
 #include <vector>
 #include <map>
 #include <cstring>
+
+#ifdef AUDIO_NO_EXCEPT
+#include <iostream>
+#else
+#include <stdexcept>
+#endif
 
 namespace Audio
 {
@@ -34,13 +38,21 @@ struct AudioData
 	{
 		SNDFILE* file = sf_open(filename.c_str(), SFM_READ, &this->info);
     	if (sf_error(file) != SF_ERR_NO_ERROR)
+#ifndef AUDIO_NO_EXCEPT
 			throw std::runtime_error("failed to load audio data at " + filename);
+#else
+			std::cout << "failed to load audio data at " + filename << std::endl;
+#endif
 		this->sampleCount = info.frames * info.channels;
 		this->data = new float[sampleCount];
 		if(sf_readf_float(file, this->data, info.frames) != info.frames)
 		{
 			sf_close(file);
+#ifndef AUDIO_NO_EXCEPT
 			throw std::runtime_error("incorect num of sampels loaded from audio data at " + filename);
+#else
+			std::cout << "incorect num of sampels loaded from audio data at " + filename << std::endl;
+#endif
 		}
 		sf_close(file);
 
@@ -74,7 +86,12 @@ struct Instance
 											instanceCallback,
 											this);
 		if(err != paNoError)
+#ifndef AUDIO_NO_EXCEPT
 			throw std::runtime_error("failed to open default stream for file at " + this->audio->filename);
+#else
+			std::cout << "failed to open default stream for file at " + this->audio->filename << std::endl;
+#endif
+
 	}
 
 	~Instance()
@@ -88,7 +105,12 @@ struct Instance
 		this->paused = false;
 		PaError err = Pa_StartStream(stream);
 		if(err != paNoError)
+#ifndef AUDIO_NO_EXCEPT
 			throw std::runtime_error("failed to start stream at " + audio->filename + " Pa Error: " + std::string(Pa_GetErrorText(err)));
+#else
+			std::cout << "failed to start stream at " + audio->filename + " Pa Error: " + std::string(Pa_GetErrorText(err)) << std::endl;
+#endif
+			
 	}
 
 	void Pause()
@@ -96,7 +118,11 @@ struct Instance
 		this->paused = true;
 		PaError err = Pa_StopStream(stream);
 		if(err != paNoError)
+#ifndef AUDIO_NO_EXCEPT
 			throw std::runtime_error("failed to stop stream at " + audio->filename + " Pa Error: " + std::string(Pa_GetErrorText(err)));
+#else
+			std::cout << "failed to stop stream at " + audio->filename + " Pa Error: " + std::string(Pa_GetErrorText(err)) << std::endl;
+#endif
 	}
 
 	bool Playing()
@@ -146,10 +172,21 @@ public:
 	Manager()
 	{
 		if(sizeof(float) != 4)
+#ifndef AUDIO_NO_EXCEPT
 			throw std::runtime_error("float must be 32bit");
+#else
+			std::cout << "float must be 32 bit" << std::endl;
+#endif
 		PaError err;
 		err = Pa_Initialize();
-		if(err != paNoError) throw std::runtime_error("Failed to initialize Port Audio\n Err: " + std::string(Pa_GetErrorText(err)));
+		if(err != paNoError)
+#ifndef AUDIO_NO_EXCEPT
+		 throw std::runtime_error("Failed to initialize Port Audio\n Err: " + std::string(Pa_GetErrorText(err)));
+#else
+		std::cout << "Failed to initialize Port Audio\n Err: " + std::string(Pa_GetErrorText(err)) << std::endl;
+#endif
+		
+
 	}
 	~Manager()
 	{

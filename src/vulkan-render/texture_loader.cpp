@@ -42,7 +42,11 @@ Texture TextureLoader::loadTexture(std::string path)
 	TempTexture* tex = &texToLoad.back();
 	tex->pixelData = stbi_load(tex->path.c_str(), &tex->width, &tex->height, &tex->nrChannels, 4);
 	if (!tex->pixelData)
-		throw std::runtime_error("failed to load texture at " + path);
+	{
+		texToLoad.pop_back();
+		std::cout << "failed to load texture at " + path << std::endl;
+		return Texture(0, glm::vec2(100, 100), "");
+	}
 
 	tex->nrChannels = 4;
 	

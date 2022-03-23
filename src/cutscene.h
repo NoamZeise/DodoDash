@@ -56,7 +56,7 @@ public:
 		if(input.Keys[GLFW_KEY_Z])
 		{
 			pressingZ += timer.FrameElapsed();
-			if(pressingZ > 500.0f)
+			if(pressingZ > 700.0f)
 				done = true;
 		}
 		else
@@ -83,6 +83,10 @@ public:
 		index = 0;
 		done = false;
 		pressingZ = 0.0f;
+	}
+	float ZPressRatio()
+	{
+		return 1.0f - (pressingZ / 700.0f);
 	}
 protected:
     struct SceneElem
@@ -176,55 +180,38 @@ public:
 				Scene(
 						{
 						SceneElem(
+							render.LoadTexture("textures/ui/pixel.png"),
+							glm::vec4(0, 0, 1920, 1080),
+							glm::vec4(0, 0, 1920, 1080),
+							-0.5f,
+							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/ParchmentBack.png"),
+							glm::vec4(0, 0, 1920, 1080),
+							glm::vec4(0, 0, 1920, 1080),
+							0.9f,
+							glm::vec4(1.0f)
+							),
+						SceneElem(
 							{"The year is 1662.",
-							"","","On the beautiful island of Mauritius","", "one dodo fights for survival.",
-							"","",
-							"The sea is rising", "", "", "Hunters are looking for their next meal.","","",
-							"You must reach higher ground to lay your egg", "to continue your bloodline.",
-							"", "",
-							"Will you Succeed?", "Or will you be The Last Dodo?"},
-							glm::vec4(0.0f, -300.0f, 0.0f, 1.0f),
-							glm::vec4(10, 1000, 100, 100),
-							glm::vec4(10, 0.0f, 100, 100),
+							"","","On the beautiful island of", "Mauritius one dodo fights", "for survival.","", "",
+							"The sea is rising.", "", "", "Hunters are looking for their","next meal.","",
+							"You must reach higher ground", "to lay your egg to continue ","your bloodline.",
+							"",
+							"Will you Succeed?", "", "Or will you be The Last Dodo?"},
+							glm::vec4(0.3f, 0.10f, 0.0f, 1.0f),
+							glm::vec4(210, 1000, 100, 100),
+							glm::vec4(210, -600.0f, 100, 100),
 							1.0f
 							),
 						SceneElem(
-							{"Hold Z to Skip"},
-							glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
-							glm::vec4(1500.0f, 1000.0f, 100, 100),
-							glm::vec4(1500.0f, 1000.0f, 100, 100),
-							5.0f
-							),
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
+							render.LoadTexture("textures/cutscene/ParchmentFore.png"),
 							glm::vec4(0, 0, 1920, 1080),
-							glm::vec4(-1920, 0, 1920, 1080),
-							0.0f,
-							glm::vec4(1.0f)
-							),
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(1920, 0, 1920, 1080),
 							glm::vec4(0, 0, 1920, 1080),
-							0.0f,
+							1.1f,
 							glm::vec4(1.0f)
 							),
-
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(0, 500, 1920, 1080),
-							glm::vec4(-960, 100, 1920, 1080),
-							0.5f,
-							glm::vec4(1.0f)
-							),
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(1920, 500, 1920, 1080),
-							glm::vec4(960, 100, 1920, 1080),
-							0.5f,
-							glm::vec4(1.0f)
-							),
-
 						SceneElem(
 							render.LoadTexture("textures/water.png"),
 							glm::vec4(-960, 800, 1920, 1080),
@@ -239,18 +226,6 @@ public:
 							1.5f,
 							glm::vec4(1.0f)
 							),
-
-						SceneElem(
-							render.LoadTexture("textures/ui/pixel.png"),
-							glm::vec4(0, 0, 1920, 1080),
-							glm::vec4(0, 0, 1920, 1080),
-							-0.5f,
-							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
-							),
-						},
-					32000.0f)/*,
-					Scene(
-						{
 						SceneElem(
 							{"Hold Z to Skip"},
 							glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
@@ -258,124 +233,8 @@ public:
 							glm::vec4(1500.0f, 1000.0f, 100, 100),
 							5.0f
 							),
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(0, 0, 1920, 1080),
-							glm::vec4(-1920, 0, 1920, 1080),
-							0.0f,
-							glm::vec4(1.0f)
-							),
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(1920, 0, 1920, 1080),
-							glm::vec4(0, 0, 1920, 1080),
-							0.0f,
-							glm::vec4(1.0f)
-							),
-
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(0, 500, 1920, 1080),
-							glm::vec4(-960, 100, 1920, 1080),
-							0.5f,
-							glm::vec4(1.0f)
-							),
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(1920, 500, 1920, 1080),
-							glm::vec4(960, 100, 1920, 1080),
-							0.5f,
-							glm::vec4(1.0f)
-							),
-
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(-960, 800, 1920, 1080),
-							glm::vec4(0, 1000, 1920, 1080),
-							1.5f,
-							glm::vec4(1.0f)
-							),
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(960, 800, 1920, 1080),
-							glm::vec4(1920, 1000, 1920, 1080),
-							1.5f,
-							glm::vec4(1.0f)
-							),
-
-						SceneElem(
-							render.LoadTexture("textures/ui/pixel.png"),
-							glm::vec4(0, 0, 1920, 1080),
-							glm::vec4(0, 0, 1920, 1080),
-							-0.5f,
-							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
-							),
 						},
-					30000.0f)
-					Scene(
-						{
-						SceneElem(
-							{"Hold Z to Skip"},
-							glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
-							glm::vec4(1500.0f, 1000.0f, 100, 100),
-							glm::vec4(1500.0f, 1000.0f, 100, 100),
-							5.0f
-							),
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(0, 0, 1920, 1080),
-							glm::vec4(-1920, 0, 1920, 1080),
-							0.0f,
-							glm::vec4(1.0f)
-							),
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(1920, 0, 1920, 1080),
-							glm::vec4(0, 0, 1920, 1080),
-							0.0f,
-							glm::vec4(1.0f)
-							),
-
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(0, 500, 1920, 1080),
-							glm::vec4(-960, 100, 1920, 1080),
-							0.5f,
-							glm::vec4(1.0f)
-							),
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(1920, 500, 1920, 1080),
-							glm::vec4(960, 100, 1920, 1080),
-							0.5f,
-							glm::vec4(1.0f)
-							),
-
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(-960, 800, 1920, 1080),
-							glm::vec4(0, 1000, 1920, 1080),
-							1.5f,
-							glm::vec4(1.0f)
-							),
-						SceneElem(
-							render.LoadTexture("textures/water.png"),
-							glm::vec4(960, 800, 1920, 1080),
-							glm::vec4(1920, 1000, 1920, 1080),
-							1.5f,
-							glm::vec4(1.0f)
-							),
-
-						SceneElem(
-							render.LoadTexture("textures/ui/pixel.png"),
-							glm::vec4(0, 0, 1920, 1080),
-							glm::vec4(0, 0, 1920, 1080),
-							-0.5f,
-							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
-							),
-						},
-					30000.0f)*/
-
+					38100.0f)
 					};
 	}
 };
@@ -594,11 +453,12 @@ public:
 						{
 						SceneElem(
 							{"Thanks For Playing!", "", "", "Credits:",
-							"Music        MakeFire Music",
-							"Sound        Paul James - Wafer Audio",
-							"Vocals       Paulina Ramirez -  Lady Yami #3939",
-							"Art           Thanos Gramosis",
-							"Code         Noam Zeise",
+							"Music           Mick Cooke - MakeFire Music",
+							"Squawk        Ralph Cooke",
+							"Art              Thanos Gramosis",
+							"Sound           Paul James - Wafer Audio",
+							"VA/Soprano   Paulina Ramirez -  Lady Yami #3939",
+							"Code            Noam Zeise",
 							""},
 							glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
 							glm::vec4(10, 1000, 100, 100),
@@ -628,7 +488,26 @@ public:
 							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
 							),
 						},
-					16000.0f)};
+					12000.0f),
+					Scene(
+						{
+						SceneElem(
+							render.LoadTexture("textures/ui/pixel.png"),
+							glm::vec4(0, 0, 1920, 1080),
+							glm::vec4(0, 0, 1920, 1080),
+							-0.5f,
+							glm::vec4(0.3f, 0.3f, 0.3f, 1.0f)
+							),
+						SceneElem(
+							render.LoadTexture("textures/cutscene/cutout.png"),
+							glm::vec4(0, 0, 1920, 1080),
+							glm::vec4(0, 0, 1920, 1080),
+							1.0f,
+							glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)
+							),
+						},
+					3000.0f)
+					};
 	}
 };
 

@@ -1,6 +1,9 @@
 #ifndef APP_H
 #define APP_H
 
+
+#define AUDIO_NO_EXCEPT
+
 #include <input.h>
 #include <audio.h>
 #include <timer.h>
@@ -22,6 +25,7 @@
 #include <string>
 
 #include <glmhelper.h>
+#include <random.h>
 
 #include "vulkan-render/render.h"
 #include "camera.h"
@@ -49,9 +53,11 @@ public:
 	~App();
 	void run();
 	void resize(int windowWidth, int windowHeight);
+	void RenderingStopped();
 
 #pragma region GLFW_CALLBACKS
 	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+	static void window_size_callback(GLFWwindow* window, int xpos, int ypos);
 	static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 	static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -129,6 +135,7 @@ private:
 	float mapScale = 1.0f;
 
 	Resource::Font* font;
+	Resource::Font* openingFont;
 	Resource::Texture buttonTexture;
 	Resource::Texture colourPixel;
 
@@ -141,11 +148,20 @@ private:
 	Cutscene activeCutsene;
 	bool inCutscene = false;
 	bool playedVictory = false;
+	bool windowPause = false;
 
 	bool didTransition = false;
 	float transitionDelay = 3000.0f;
 	float transitionTimer = 3001.0f;
 	glm::mat4 fadeMat;
+	GameRandom rand;
+
+	int prevBullets = 0;
+	std::string currentBg;
+	float timeSinceEgg = 0.0f;
+
+	float mainGameMusicVolume = 0.8f;
+	std::string currentCutsceneMusic;
 };
 
 #endif

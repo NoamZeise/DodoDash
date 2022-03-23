@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <cstring>
+#include <iostream>
 
 #include "stb_image.h"
 #include "config.h"
@@ -21,7 +22,7 @@
 namespace Resource
 {
 
-const int MAX_TEXTURES_SUPPORTED = 200;//match in shader
+const int MAX_TEXTURES_SUPPORTED = 250;//match in shader
 
 enum class TextureType
 {

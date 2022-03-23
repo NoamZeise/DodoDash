@@ -21,6 +21,7 @@ App::App()
 	glfwSetWindowIcon(mWindow, 1, winIcon);
 	glfwSetWindowUserPointer(mWindow, this);
 	glfwSetFramebufferSizeCallback(mWindow, framebuffer_size_callback);
+	glfwSetWindowPosCallback(mWindow, window_size_callback);
 	glfwSetCursorPosCallback(mWindow, mouse_callback);
 	glfwSetScrollCallback(mWindow, scroll_callback);
 	glfwSetKeyCallback(mWindow, key_callback);
@@ -40,6 +41,7 @@ App::App()
 	mRender = new Render(mWindow, glm::vec2(width, height));
 
 	loadAssets();
+	currentCutsceneMusic = "audio/cutsceneVO/Intro.ogg";
 	audioManager.Play("audio/cutsceneVO/Intro.ogg", false, 1.0f);
 	activeCutsene = openingCutscene;
 	inCutscene = true;
@@ -55,6 +57,7 @@ App::~App()
 		submitDraw.join();
 	delete mRender;
 	delete font;
+	delete openingFont;
 	mRender = nullptr;
 	glfwDestroyWindow(mWindow);
 	glfwTerminate();
@@ -63,8 +66,9 @@ App::~App()
 void App::loadAssets()
 {
 	font = mRender->LoadFont("textures/ui/menu/PermanentMarker-Regular.ttf");
+	openingFont = mRender->LoadFont("textures/ui/Charm-Bold.ttf");
 
-	openingCutscene = Opening(*mRender, font);
+	openingCutscene = Opening(*mRender, openingFont);
 	victoryCutscene = Victory(*mRender, font);
 	extinctCutscene = Extinct(*mRender, font);
 
@@ -89,7 +93,7 @@ void App::loadAssets()
 	maps.push_back(Map("maps/level3.tmx", mRender, mapScale, font, 0.07f));
 	currentMap = maps[currentMapIndex];
 	particleManager = ParticleManager(*mRender);
-	player = Player(*mRender, 0.6f, &particleManager);
+	player = Player(*mRender, 0.6f, &particleManager, &audioManager);
 	poacher = Poacher(*mRender, mapScale, glm::vec4(0, 0, 0, 0));
 	fruit = Fruit(*mRender);
 	crab = Crab(*mRender, mapScale, glm::vec4(0.0f));
@@ -110,6 +114,18 @@ void App::loadAssets()
 	bgMountainRock = mRender->LoadTexture("textures/bg/mountain/Rock.png");
 	bgMountainFog = mRender->LoadTexture("textures/bg/mountain/Fog.png");
 
+	for( int i = 1; i < 4; i++)
+		audioManager.LoadAudioFile("audio/music/lvl" + std::to_string(i) + ".ogg");
+	audioManager.LoadAudioFile("audio/sfx/WaveLoop.ogg");
+	audioManager.LoadAudioFile("audio/cutsceneVO/Ending.ogg");
+	audioManager.LoadAudioFile("audio/music/death.ogg");
+	audioManager.LoadAudioFile("audio/music/complete.ogg");
+	for( int i = 1; i < 6; i++)
+		audioManager.LoadAudioFile("audio/sfx/MonkeyDeath0" + std::to_string(i) + ".wav");
+	audioManager.LoadAudioFile("audio/sfx/PoacherShoots2.wav");
+	audioManager.LoadAudioFile("audio/sfx/Playerlands1.wav");
+	audioManager.LoadAudioFile("audio/sfx/Playerlands2.wav");
+
 	mRender->endResourceLoad();
 }
 
@@ -126,34 +142,30 @@ void App::loadMap()
 	switch(currentMapIndex)
 	{
 		case 0:
+			particleManager.SetRainParams(30.0f, 8);
 			backgrounds.push_back(Background(bgBeachback, 0, 0.7, 0.0f,-9.0f, currentMap.getMapRect()));
 			backgrounds.push_back(Background(bgBeach, 0, 1.0, 0.0f, -8.9f, currentMap.getMapRect()));
 			backgrounds.push_back(Background(bgBeachFog, 0, 0.8, -0.05f, -8.8f, currentMap.getMapRect()));
 			backgrounds.push_back(Background(bgBeachRock, 0, 0.5, 0.0f,-8.7f, currentMap.getMapRect()));
-			StopAudio();
-			audioManager.Play("audio/music/lvl1.ogg", false, 0.5f);
 			break;
 		case 1:
+			particleManager.SetRainParams(20.0f, 15);
 			backgrounds.push_back(Background(bgForest, 0, 0.9, 0.0f,-9.0f, currentMap.getMapRect()));
 			backgrounds.push_back(Background(bgForestLeaves, 0, 0.7, 0.0f,-8.7f, currentMap.getMapRect()));
 			backgrounds.push_back(Background(bgForestFog, 0, 0.75, -0.05f, -8.6f, currentMap.getMapRect()));
-			StopAudio();
-			audioManager.Play("audio/music/lvl2.ogg", false, 0.5f);
 			break;
 		case 2:
+			particleManager.SetRainParams(15.0f, 16);
 			backgrounds.push_back(Background(bgMountainback, 0, 0.9, 0.0f,-9.0f, currentMap.getMapRect()));
 			backgrounds.push_back(Background(bgMountain, 0, 0.8, 0.0f, -8.9f, currentMap.getMapRect()));
 			backgrounds.push_back(Background(bgMountainFog, 0, 0.7, -0.05f, -8.8f, currentMap.getMapRect()));
 			backgrounds.push_back(Background(bgMountainRock, 100, 0.5, 0.0f,-8.7f, currentMap.getMapRect()));
-			StopAudio();
-			audioManager.Play("audio/music/lvl3.ogg", false, 0.5f);
 			break;
-		/*case 3:
-			StopAudio();
-			audioManager.Play("audio/Dodo Hornpipe 4th Level Demo.wav", true, 0.5f);
-			break;*/
 
 	}
+	audioManager.RemovePlayed();
+	audioManager.SetVolume(currentBg, mainGameMusicVolume);
+	audioManager.Play("audio/sfx/WaveLoop.ogg", true, 0.0f);
 	currentMap.Reset();
 	player.Reset(currentMap.getPlayerSpawn());
 	bullets.clear();
@@ -195,6 +207,9 @@ void App::nextMap()
 		return;
 	}
 	currentMap = maps[currentMapIndex];
+	StopAudio();
+	currentBg = "audio/music/lvl" + std::to_string(currentMapIndex + 1) + ".ogg";
+	audioManager.Play(currentBg, true, 0.7f);
 	loadMap();
 }
 
@@ -219,8 +234,18 @@ void App::run()
 	}
 }
 
+void App::RenderingStopped()
+{
+	if(!isPaused && !windowPause)
+	{
+		windowPause = true;
+		pauseToggled();
+	}
+}
+
 void App::resize(int windowWidth, int windowHeight)
 {
+	RenderingStopped();
 	if(submitDraw.joinable())
 		submitDraw.join();
 	mWindowWidth = windowWidth;
@@ -229,22 +254,40 @@ void App::resize(int windowWidth, int windowHeight)
 		mRender->framebufferResize();
 }
 
+
 void App::update()
 {
 #ifdef TIME_APP_DRAW_UPDATE
 	auto start = std::chrono::high_resolution_clock::now();
 #endif
 
+	glfwPollEvents();
+	if(!glfwGetWindowAttrib(mWindow, GLFW_FOCUSED))
+	{
+		RenderingStopped();
+	}
+	else if(timer.FrameElapsed() < 100)
+	{
+
 	if(!isPaused)
+	{
+
 		transitionTimer += timer.FrameElapsed();
+	}
+	if(windowPause)
+	{
+		windowPause = false;
+		pauseToggled();
+	}
 
 	if(finishedAllMaps && !inCutscene && !playedVictory)
 	{
 		playedVictory = true;
 		inCutscene = true;
 		StopAudio();
-		audioManager.Play("audio/cutsceneVO/Ending.ogg", false, 1.0f);
-		audioManager.Play("audio/The Last Dodo Good Ending.ogg", false, 0.6f);
+		transitionTimer = transitionDelay;
+		currentCutsceneMusic = "audio/cutsceneVO/Ending.ogg";
+		audioManager.Play(currentCutsceneMusic, false, 1.0f);
 		activeCutsene = victoryCutscene;
 		activeCutsene.Reset();
 	}
@@ -258,6 +301,7 @@ void App::update()
 
 	if(inCutscene)
 	{
+		audioManager.SetVolume(currentCutsceneMusic, activeCutsene.ZPressRatio() * activeCutsene.ZPressRatio());
 		if(activeCutsene.isOver())
 		{
 			if(!didTransition)
@@ -271,14 +315,11 @@ void App::update()
 			StopAudio();
 			inCutscene = false;
 			activeCutsene = Cutscene();
-			loadMap();
+			currentMapIndex--;
+			nextMap();
 			}
 		}
 	}
-
-	if(timer.FrameElapsed() < 100)
-	{
-	glfwPollEvents();
 
 	if (input.Keys[GLFW_KEY_F] && !previousInput.Keys[GLFW_KEY_F])
 	{
@@ -291,7 +332,7 @@ void App::update()
 		else
 		{
 			const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-			glfwSetWindowMonitor(mWindow, NULL, 0, 0, mWindowWidth, mWindowHeight, mode->refreshRate);
+			glfwSetWindowMonitor(mWindow, NULL, 0, 50, mWindowWidth, mWindowHeight, mode->refreshRate);
 		}
 	}
 	if(input.Keys[GLFW_KEY_ESCAPE] && !previousInput.Keys[GLFW_KEY_ESCAPE])
@@ -340,9 +381,8 @@ void App::gameUpdate()
 
 			didTransition = true;
 			transitionTimer = 0.0f;
-			StopAudio();
-			audioManager.Play("audio/death.ogg", false, 0.7f);
-			//audioManager.Play("audio/cutsceneVO/Death.ogg", false, 1.0f);
+			audioManager.SetVolume(currentBg, 0.3f);
+			audioManager.Play("audio/music/death.ogg", false, 0.7f);
 		}
 		else
 		{
@@ -366,6 +406,12 @@ void App::gameUpdate()
 	mapGoal.Update(timer, camArea);
 	if(gh::colliding(mapGoal.getHitBox(), playerHitBox))
 	{
+		timeSinceEgg += timer.FrameElapsed();
+		auto musicFade = (3200.0f - timeSinceEgg) / 3200.0f;
+		musicFade *= musicFade;
+		if(musicFade > mainGameMusicVolume)
+			musicFade = mainGameMusicVolume;
+		audioManager.SetVolume(currentBg, (3200.0f - timeSinceEgg) / 3200.0f);
 		player.EndLevel();
 		if(player.EggFinished())
 		{
@@ -374,7 +420,7 @@ void App::gameUpdate()
 				didTransition = true;
 				transitionTimer = 0.0f;
 				StopAudio();
-				audioManager.Play("audio/complete.ogg", false, 0.7f);
+				audioManager.Play("audio/music/complete.ogg", false, 1.0f);
 			}
 			else
 			{
@@ -383,11 +429,19 @@ void App::gameUpdate()
 			}
 		}
 	}
-
-	if(playerHitBox.y > currentMap.getMapRect().w || playerMid.y > currentMap.getWaterLevel())
+	else
 	{
-		player.kill();
+		if(playerHitBox.y > currentMap.getMapRect().w || playerMid.y > currentMap.getWaterLevel())
+		{
+			player.kill();
+		}
+		timeSinceEgg = 0.0f;
 	}
+	auto distToPlayer = (playerMid.y / currentMap.getWaterLevel());
+	distToPlayer = distToPlayer*distToPlayer;
+	distToPlayer -= 0.35f;
+	distToPlayer = distToPlayer < 0.0f ? 0.0f: distToPlayer;
+	audioManager.SetVolume("audio/sfx/WaveLoop.ogg", distToPlayer);
 
 	for(int i = 0; i < fruits.size(); i++)
 	{
@@ -405,6 +459,8 @@ void App::gameUpdate()
 		{
 			if(playerHitBox.y + playerHitBox.w/2 < crabs[i].getHitBox().y)
 			{
+				audioManager.Play("audio/sfx/Playerlands" + std::to_string((int)(rand.PositiveReal()*2) + 1) + ".wav", false, 0.5f);
+				audioManager.Play("audio/sfx/MonkeyDeath0" + std::to_string((int)(rand.PositiveReal()*5) + 1) + ".wav", false, 0.45f);
 				player.bounce();
 				crabs.erase(crabs.begin() + i--);
 			}
@@ -422,6 +478,8 @@ void App::gameUpdate()
 			{
 				if(playerHitBox.y + playerHitBox.w/2 < poachers[i].getHitBox().y)
 				{
+					audioManager.Play("audio/sfx/Playerlands" + std::to_string((int)(rand.PositiveReal()*2) + 1) + ".wav", false, 0.5f);
+					audioManager.Play("audio/sfx/PoacherDeath.wav", false, 0.35f);
 					player.bounce();
 					poachers[i].kill();
 				}
@@ -431,6 +489,9 @@ void App::gameUpdate()
 				}
 			}
 	}
+
+	if(prevBullets < bullets.size())
+		audioManager.Play("audio/sfx/PoacherShoots2.wav", false, 0.9f);
 
 	for(unsigned int i = 0; i < bullets.size(); i++)
 	{
@@ -448,6 +509,8 @@ void App::gameUpdate()
 				break;
 			}
 	}
+
+	prevBullets = bullets.size();
 
 	cam.Target(player.getMidPoint(), timer);
 	particleManager.Update(timer, cam.getCameraArea());
@@ -515,7 +578,7 @@ void App::pauseToggled()
 	if(toggleMusicThread.joinable())
 		toggleMusicThread.join();
 	pauseMenu.Reset();
-	if(isPaused)
+	if(isPaused || windowPause)
 	{
 		toggleMusicThread = std::thread(&Audio::Manager::PauseAll, &audioManager);
 		glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -589,8 +652,7 @@ void App::gameDraw()
 
 	for(auto& crab: crabs)
 		crab.Draw(*mRender);
-
-
+		
 	player.Draw(*mRender);
 
 	particleManager.Draw(*mRender);
@@ -635,6 +697,12 @@ void App::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	auto app = reinterpret_cast<App*>(glfwGetWindowUserPointer(window));
 	app->resize(width, height);
+}
+
+void App::window_size_callback(GLFWwindow* window, int xpos, int ypos)
+{
+	auto app = reinterpret_cast<App*>(glfwGetWindowUserPointer(window));
+	app->RenderingStopped();
 }
 
 void App::mouse_callback(GLFWwindow* window, double xpos, double ypos)

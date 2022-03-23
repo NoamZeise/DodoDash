@@ -7,9 +7,12 @@
 #endif
 #include <GLFW/glfw3.h>
 
+#include <string>
+
 #include <timer.h>
 #include <input.h>
-
+#include <random.h>
+#include <audio.h>
 #include "vulkan-render/render.h"
 #include "animation.h"
 #include "vulkan-render/texture_loader.h"
@@ -24,7 +27,7 @@ class Player
 {
 public:
 	Player() {}
-	Player(Render &render, float scale, ParticleManager* particleManager);
+	Player(Render &render, float scale, ParticleManager* particleManager, Audio::Manager* manager);
 	void Update(Timer &timer, Input &input, std::vector<glm::vec4> &colliders);
 	void Draw(Render &render);
 	glm::vec2 getMidPoint() { return glm::vec2(position.x + drawRect.z/2, position.y + drawRect.w/2); }
@@ -47,6 +50,8 @@ public:
 	{
 		hp = maxHp;
 		invincibilityTimer = invincibilityDelay;
+		sinceJumpPressed = sinceJumpOld + 100.0f;
+		unpressedJump = false;
 		position = pos;
 		layingEgg = false;
 		EggDone = false;
@@ -56,6 +61,7 @@ public:
 	{ 
 		if(invincibilityTimer > invincibilityDelay)
 		{
+			audioManager->Play("audio/sfx/HitSquawk" + std::to_string((int)(rand.PositiveReal()*5) + 1) + ".wav", false, 0.9f);
 			justDamaged = true;
 			invincibilityTimer = 0;
 			hp--;
@@ -67,6 +73,7 @@ public:
 	}
 	void addHP(int i)
 	{
+		audioManager->Play("audio/sfx/EatFruit" + std::to_string((int)(rand.PositiveReal()*3) + 1) + ".ogg", false, 0.7f);
 		if(hp + i > maxHp)
 			hp = maxHp;
 		else
@@ -74,7 +81,7 @@ public:
 	}
 	void setJumpPressed()
 	{
-		sinceJumpPressed = 100.0f;
+		sinceJumpPressed = sinceJumpOld;
 	}
 	bool  isJumping() 
 	{
@@ -98,6 +105,7 @@ public:
 	glm::vec2 getVelocity() { return this->velocity; }
 
 private:
+void controls(Timer &timer, Input &input);
 void movement(Timer &timer, std::vector<glm::vec4> &colliders);
 glm::vec4 colliding(std::vector<glm::vec4> &colliders, glm::vec4 checkRect);
 void animate(Timer &timer);
@@ -137,7 +145,7 @@ float yMaximumFall = 1.0f;
 float jumpAccel = -0.01f;
 float jumpMax = -1.15f;
 
-float jumpTimer = 170.0f;
+float jumpTimer = 0.0f;
 float jumpDelay = 170.0f;
 
 float boostTimer = 0.0f;
@@ -148,6 +156,7 @@ float sinceGroundedTimer = 0.0f;
 float sinceGroundedDelay = 70.0f;
 
 float sinceJumpPressed = 0.0f;
+float sinceJumpOld = 100.0f;
 
 bool invFlash = false;
 bool justDamaged = false;
@@ -186,6 +195,14 @@ ParticleManager* particleManager;
 float glideFeatherTimer = 0.0f;
 float glideFeatherDelay = 100.0f;
 
+float glideSoundTimer = 250.0f;
+float glideSoundDelay = 250.0f;
+bool playingGlide = false;
+
+bool playedJump = false;
+bool playedLand = false;
+GameRandom rand;
+Audio::Manager *audioManager;
 };
 
 

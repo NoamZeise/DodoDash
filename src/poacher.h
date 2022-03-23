@@ -51,7 +51,7 @@ private:
 	glm::vec4 drawRect;
 	glm::vec4 hitBox;
 
-	glm::vec4 hitboxOffset = glm::vec4(110, 120, 100, 110);
+	glm::vec4 hitboxOffset = glm::vec4(115, 120, 100, 110);
 
 	float scale = 1.0f;
 

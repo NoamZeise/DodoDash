@@ -1,9 +1,10 @@
 #include "player.h"
 
-Player::Player(Render &render, float scale, ParticleManager* particleManager)
+Player::Player(Render &render, float scale, ParticleManager* particleManager, Audio::Manager* manager)
 {
 	this->scale = scale;
 	this->particleManager = particleManager;
+	this->audioManager = manager;
 	hitBoxOffset *= scale;
 	Resource::Texture run = render.LoadTexture("textures/dodo/run.png");
 	animations.RunRight = Animation(run, 100.0f, 320, false);
@@ -17,11 +18,39 @@ Player::Player(Render &render, float scale, ParticleManager* particleManager)
 	animations.LayEgg = Animation(render.LoadTexture("textures/dodo/layEgg.png"), 250.0f, 320, {0, 200, 100, 0, 0, 0,0,0,0,0,0});
 	currentAnimation = animations.RunRight;
 	velocity = glm::vec2(0, 0);
+
+	for( int i = 1; i < 4; i++)
+		audioManager->LoadAudioFile("audio/sfx/EatFruit" + std::to_string(i) + ".ogg");
+	for( int i = 1; i < 5; i++)
+		audioManager->LoadAudioFile("audio/sfx/HitSquawk" + std::to_string(i) + ".wav");
+	audioManager->LoadAudioFile("audio/sfx/WingFlutter.wav");
+	for( int i = 1; i < 2; i++)
+		audioManager->LoadAudioFile("audio/sfx/PlayerJump" + std::to_string(i) + ".wav");
+	
 }
 
 void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &colliders)
 {
-	if(invincibilityTimer < invincibilityDelay)
+	controls(timer, input);
+
+	movement(timer, colliders);
+	
+	animate(timer);
+
+	drawRect.x = position.x;
+	drawRect.y = position.y;
+	drawRect.z = currentFrame.size.x * scale;
+	drawRect.w = currentFrame.size.y * scale;
+	modelMat = glmhelper::calcMatFromRect(drawRect, 0.0f, 0.9f);
+	prevMoveDir = moveDir;
+	jumpTimer += timer.FrameElapsed();
+	sinceGroundedTimer += timer.FrameElapsed();
+	invincibilityTimer += timer.FrameElapsed();
+}
+
+void Player::controls(Timer &timer, Input &input)
+{
+		if(invincibilityTimer < invincibilityDelay)
 		invFlash = ((int)(invincibilityTimer / 100.0f) % 2 == 0);
 	if(hp == 1)
 		xMax = xMaxPaniced;
@@ -37,16 +66,18 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 	{
 		moveDir -= 1;
 	}
-	unpressedJump = sinceJumpPressed < 100.0f;
+	unpressedJump = sinceJumpPressed < sinceJumpOld;
 
 	if(input.Keys[GLFW_KEY_Z])
 	{
 		sinceJumpPressed += timer.FrameElapsed();
 		if(jumpTimer < jumpDelay)
 		{
-			jumping = true;
 			if(sinceGroundedTimer < sinceGroundedDelay && unpressedJump)
 			{
+				jumping = true;
+				playedJump = false;
+				playedLand = false;
 				velocity.y = initalJumpVel;
 				yAcceleration = jumpAccel;
 				sinceGroundedTimer = sinceGroundedDelay + 1;
@@ -72,10 +103,17 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 			else
 			{
 				glideFeatherTimer += timer.FrameElapsed();
+				glideSoundTimer += timer.FrameElapsed();
 				if(glideFeatherTimer > glideFeatherDelay)
 				{
 					glideFeatherTimer = 0.0f;
 					particleManager->EmitFeather(getMidPoint(), velocity * 0.6f, 300.0f);
+				}
+				if(glideSoundTimer > glideSoundDelay)
+				{
+					glideSoundTimer = 0.0f;
+					audioManager->Play("audio/sfx/WingFlutter.wav", false, 0.45f);
+					playingGlide = true;
 				}
 				//particleManager->EmitRain(getMidPoint(), velocity, 1000.0f);//EmitFeather(getMidPoint(), velocity, 1000.0f);
 				isFloating = true;
@@ -97,6 +135,7 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 	else
 	{
 		sinceJumpPressed = 0.0f;
+		glideSoundTimer = glideSoundDelay;
 		unpressedJump = true;
 		isFloating = false;
 		isBoosting = false;
@@ -107,6 +146,20 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 		yAcceleration = gravity;
 		jumpTimer = jumpDelay + 1;
 		yMax = yMaximumFall;
+	}
+
+	if(grounded && playingGlide)
+	{
+		playingGlide = false;
+		audioManager->SetVolume("audio/sfx/WingFlutter.wav", 0.1f);
+	}
+
+	if(justDamaged || justBooseted)
+	{
+		justDamaged = false;
+		justBooseted = false;
+		for(int i = 0; i < 10; i++)
+			particleManager->EmitFeather(getMidPoint(), velocity, 800.0f);
 	}
 
 	if((moveDir == -1 && velocity.x > 0) || (moveDir == 1 && velocity.x < 0))
@@ -136,28 +189,6 @@ void Player::Update(Timer &timer, Input &input, std::vector<glm::vec4> &collider
 
 	if(layingEgg)
 		velocity = glm::vec2(0.0f);
-	movement(timer, colliders);
-	
-	animate(timer);
-
-	if(justDamaged || justBooseted)
-	{
-		justDamaged = false;
-		justBooseted = false;
-		for(int i = 0; i < 10; i++)
-			particleManager->EmitFeather(getMidPoint(), velocity, 800.0f);
-	}
-
-	
-	drawRect.x = position.x;
-	drawRect.y = position.y;
-	drawRect.z = currentFrame.size.x * scale;
-	drawRect.w = currentFrame.size.y * scale;
-	modelMat = glmhelper::calcMatFromRect(drawRect, 0.0f, 0.9f);
-	prevMoveDir = moveDir;
-	jumpTimer += timer.FrameElapsed();
-	sinceGroundedTimer += timer.FrameElapsed();
-	invincibilityTimer += timer.FrameElapsed();
 }
 
 void Player::movement(Timer &timer, std::vector<glm::vec4> &colliders)
